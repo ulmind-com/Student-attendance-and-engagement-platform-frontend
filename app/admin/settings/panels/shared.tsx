@@ -1,22 +1,22 @@
 "use client";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useSaveSuccess } from "../SaveSuccessProvider";
 
 // --- Shared UI Primitives ---
 
 export function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div className="mb-8">
-      <h2 className="text-2xl font-black text-slate-800 tracking-tight">{title}</h2>
-      <p className="text-slate-500 font-medium mt-1">{description}</p>
+    <div className="mb-6 md:mb-8">
+      <h2 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">{title}</h2>
+      <p className="text-slate-500 font-medium mt-1 text-sm">{description}</p>
     </div>
   );
 }
 
 export function SettingsCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm p-5 ${className ?? ""}`}>
+    <div className={`bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-5 ${className ?? ""}`}>
       {children}
     </div>
   );
@@ -64,42 +64,28 @@ export function Toggle({ enabled, onChange, label, description }: {
 }
 
 export function SaveButton({ onSave, label = "Save Changes" }: { onSave: () => void; label?: string }) {
+  const { showSaveSuccess } = useSaveSuccess();
   const [saved, setSaved] = useState(false);
-  const [toast, setToast] = useState(false);
 
   const handleSave = () => {
     onSave();
     setSaved(true);
-    setToast(true);
-    setTimeout(() => { setSaved(false); setToast(false); }, 3000);
+    showSaveSuccess("Settings Saved! ✨");
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (
-    <>
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -40, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -40, scale: 0.9 }}
-            className="fixed top-8 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 bg-slate-800/95 backdrop-blur-md text-white rounded-full shadow-2xl flex items-center gap-3"
-          >
-            <CheckCircle2 className="w-5 h-5 text-green-400" />
-            <span className="font-bold text-sm">Settings saved successfully! ✨</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <motion.button
-        onClick={handleSave}
-        whileTap={{ scale: 0.97 }}
-        className={`px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${
-          saved
-            ? "bg-green-500 text-white shadow-green-200"
-            : "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-purple-200 hover:shadow-purple-300 hover:from-purple-700 hover:to-pink-700"
-        }`}
-      >
-        {saved ? "✓ Saved!" : label}
-      </motion.button>
-    </>
+    <motion.button
+      onClick={handleSave}
+      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.02 }}
+      className={`px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${
+        saved
+          ? "bg-green-500 text-white shadow-green-200"
+          : "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-purple-200 hover:shadow-purple-300"
+      }`}
+    >
+      {saved ? "✓ Saved!" : label}
+    </motion.button>
   );
 }

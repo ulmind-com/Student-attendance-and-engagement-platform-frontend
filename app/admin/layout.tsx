@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Lottie from "lottie-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SaveSuccessProvider } from "./SaveSuccessProvider";
 
 export default function AdminLayout({
   children,
@@ -142,6 +143,7 @@ export default function AdminLayout({
   );
 
   return (
+    <SaveSuccessProvider>
     <div className="min-h-screen bg-slate-50 flex font-outfit">
 
       {/* ── DESKTOP SIDEBAR ── */}
@@ -283,5 +285,6 @@ export default function AdminLayout({
         )}
       </AnimatePresence>
     </div>
+    </SaveSuccessProvider>
   );
 }

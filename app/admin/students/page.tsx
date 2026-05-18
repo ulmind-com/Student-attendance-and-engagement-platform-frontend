@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, MoreVertical, ShieldAlert, HeartPulse, ShieldCheck, UserPlus, Upload, X, Save, CheckCircle2, MousePointerClick, Users, AlertTriangle, BarChart2, Lightbulb, ClipboardList, Pencil, AlertOctagon, Calendar, UserCheck, UserX, ChevronLeft, ChevronRight, Clock, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSaveSuccess } from "../SaveSuccessProvider";
 
 // Mock Data structure for typing
 type TimelineEntry = { day: string, emoji: string, score: number, alert?: boolean };
@@ -59,15 +60,7 @@ export default function StudentsPage() {
     parentsName: "", parentsPhone: "", bloodGroup: "", profilePhoto: "" 
   });
 
-  // Toast state
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
-  };
+  const { showSaveSuccess } = useSaveSuccess();
 
   const fetchStudents = async () => {
     try {
@@ -113,7 +106,7 @@ export default function StudentsPage() {
   const toggleStatus = async (roll: string) => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${roll}/toggle-status`, { method: "PATCH" });
-      if (res.ok) { fetchStudents(); showToast("Status updated!"); }
+      if (res.ok) { fetchStudents(); showSaveSuccess("Status updated!"); }
     } catch {}
   };
 
@@ -146,7 +139,7 @@ export default function StudentsPage() {
         setIsAddModalOpen(false);
         setFormData({ firstName: "", lastInitial: "", rollNumber: "", class_name: "Nursery", section: "A", parentsName: "", parentsPhone: "", bloodGroup: "", profilePhoto: "" });
         fetchStudents();
-        showToast("Student added successfully! 🎉");
+        showSaveSuccess("Student added! 🎉");
       }
     } catch (e) {
       console.error(e);
@@ -169,7 +162,7 @@ export default function StudentsPage() {
         if (selectedStudent?.rollNumber === studentToEdit.rollNumber) {
           setSelectedStudent(studentToEdit);
         }
-        showToast("Profile updated successfully! ✨");
+        showSaveSuccess("Profile updated! ✨");
       }
     } catch (e) {
       console.error(e);
@@ -185,7 +178,7 @@ export default function StudentsPage() {
       if (res.ok) {
         if (selectedStudent?.rollNumber === rollNumber) setSelectedStudent(null);
         fetchStudents();
-        showToast("Student deleted successfully! 🗑️");
+        showSaveSuccess("Student deleted! 🗑️");
       }
     } catch (e) {
       console.error(e);
@@ -206,7 +199,7 @@ export default function StudentsPage() {
       if (res.ok) {
         setIsCsvModalOpen(false);
         fetchStudents();
-        showToast("CSV imported successfully! 📊");
+        showSaveSuccess("CSV imported! 📊");
       }
     } catch (err) {
       console.error(err);
@@ -215,20 +208,6 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-8 relative">
-      {/* Toast Notification (Top Center / Middle Position) */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -50, scale: 0.9 }}
-            className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-slate-800/95 backdrop-blur-md text-white rounded-full shadow-2xl flex items-center space-x-3 border border-white/10"
-          >
-            <CheckCircle2 className="w-5 h-5 text-green-400" />
-            <span className="font-bold text-sm tracking-wide">{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
