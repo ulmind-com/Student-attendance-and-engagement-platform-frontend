@@ -222,7 +222,7 @@ export default function StudentsPage() {
       fData.append("file", file);
       fData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "students_unsigned");
       
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dmeu6hdwg"}/image/upload`, { method: "POST", body: fData });
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dmeu6hdwg"}/auto/upload`, { method: "POST", body: fData });
       const cloudData = await res.json();
       
       if (cloudData.secure_url) {
@@ -899,8 +899,9 @@ export default function StudentsPage() {
               </div>
               <div className="flex-1 bg-slate-100 p-4 overflow-auto min-h-[50vh] flex items-center justify-center">
                 {viewDocumentUrl.toLowerCase().endsWith('.pdf') ? (
-                  <iframe 
-                    src={`https://docs.google.com/gview?url=${encodeURIComponent(viewDocumentUrl)}&embedded=true`} 
+                  <embed 
+                    src={`${viewDocumentUrl}#toolbar=0`} 
+                    type="application/pdf"
                     className="w-full h-full min-h-[60vh] rounded-xl shadow-inner border border-slate-200 bg-white"
                   />
                 ) : (
