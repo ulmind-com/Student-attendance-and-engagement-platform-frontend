@@ -44,6 +44,7 @@ export default function StudentsPage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [studentToEdit, setStudentToEdit] = useState<Student | null>(null);
+  const [viewDocumentUrl, setViewDocumentUrl] = useState<string | null>(null);
 
   // Calendar & Attendance state
   const [attendanceDates, setAttendanceDates] = useState<DateEntry[]>([]);
@@ -541,9 +542,9 @@ export default function StudentsPage() {
                       
                       {selectedStudent.parentStatus === "Approved" && selectedStudent.parentConsentUrl ? (
                         <div className="flex items-center gap-2 mt-1">
-                          <a href={selectedStudent.parentConsentUrl} target="_blank" rel="noreferrer" className="text-[10px] font-black bg-green-200 text-green-800 px-3 py-1.5 rounded-full hover:bg-green-300 transition-colors flex items-center">
+                          <button onClick={() => setViewDocumentUrl(selectedStudent.parentConsentUrl!)} className="text-[10px] font-black bg-green-200 text-green-800 px-3 py-1.5 rounded-full hover:bg-green-300 transition-colors flex items-center shadow-sm">
                             <Eye className="w-3 h-3 mr-1" /> View
-                          </a>
+                          </button>
                           <button 
                             onClick={() => consentFileInputRef.current?.click()}
                             disabled={isUploadingConsent}
@@ -857,6 +858,61 @@ export default function StudentsPage() {
               </div>
             </div>
           </Modal>
+        )}
+      </AnimatePresence>
+      {/* Document Viewer Modal */}
+      <AnimatePresence>
+        {viewDocumentUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md"
+            onClick={() => setViewDocumentUrl(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-[2rem] shadow-2xl overflow-hidden w-full max-w-4xl max-h-[90vh] flex flex-col relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="font-bold text-slate-800 flex items-center">
+                  <ClipboardList className="w-5 h-5 mr-2 text-purple-500" />
+                  Parent Consent Document
+                </h3>
+                <div className="flex items-center gap-3">
+                  <a 
+                    href={viewDocumentUrl} 
+                    download 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-xs font-bold text-purple-600 bg-purple-100 px-3 py-1.5 rounded-full hover:bg-purple-200 transition-colors"
+                  >
+                    Open Original
+                  </a>
+                  <button onClick={() => setViewDocumentUrl(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-500">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 bg-slate-100 p-4 overflow-auto min-h-[50vh] flex items-center justify-center">
+                {viewDocumentUrl.toLowerCase().endsWith('.pdf') ? (
+                  <iframe 
+                    src={`${viewDocumentUrl}#toolbar=0&navpanes=0`} 
+                    className="w-full h-full min-h-[60vh] rounded-xl shadow-inner border border-slate-200 bg-white"
+                  />
+                ) : (
+                  <img 
+                    src={viewDocumentUrl} 
+                    alt="Document" 
+                    className="max-w-full max-h-[70vh] rounded-xl shadow-md border-4 border-white object-contain" 
+                  />
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
