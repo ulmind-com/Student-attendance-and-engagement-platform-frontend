@@ -25,6 +25,7 @@ type Student = {
   parentStatus: string;
   timeline: TimelineEntry[];
   status?: string; // "active" | "inactive"
+  parentConsentUrl?: string;
 };
 type AttendanceRecord = { roll_number: string; name: string; status: string; score: number; emoji: string; risk: string; alert: boolean; date: string; timestamp: string };
 type DateEntry = { date: string; count: number };
@@ -48,6 +49,10 @@ export default function StudentsPage() {
   const [attendanceDates, setAttendanceDates] = useState<DateEntry[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [dateRecords, setDateRecords] = useState<AttendanceRecord[]>([]);
+
+  // Consent Upload state
+  const [isUploadingConsent, setIsUploadingConsent] = useState(false);
+  const consentFileInputRef = useRef<HTMLInputElement>(null);
   const [todayRecords, setTodayRecords] = useState<AttendanceRecord[]>([]);
   const [calMonth, setCalMonth] = useState(new Date().getMonth());
   const [calYear, setCalYear] = useState(new Date().getFullYear());
@@ -204,6 +209,45 @@ export default function StudentsPage() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleConsentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !selectedStudent) return;
+    const file = e.target.files[0];
+    setIsUploadingConsent(true);
+    
+    try {
+      const fData = new FormData();
+      fData.append("file", file);
+      fData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "students_unsigned");
+      
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dmeu6hdwg"}/image/upload`, { method: "POST", body: fData });
+      const cloudData = await res.json();
+      
+      if (cloudData.secure_url) {
+        // Save to backend
+        const updateRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/students/${selectedStudent.rollNumber}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            ...selectedStudent,
+            parentStatus: "Approved", 
+            parentConsentUrl: cloudData.secure_url 
+          })
+        });
+        
+        if (updateRes.ok) {
+          const updatedStudent = await updateRes.json();
+          setSelectedStudent(updatedStudent);
+          fetchStudents();
+          showSaveSuccess("Consent paper saved! 📄");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsUploadingConsent(false);
+    if (consentFileInputRef.current) consentFileInputRef.current.value = "";
   };
 
   return (
@@ -479,13 +523,44 @@ export default function StudentsPage() {
                       <div className="text-xs font-bold text-purple-400 uppercase mt-1">Attendance</div>
                     </div>
                     <div className={cn(
-                      "rounded-2xl p-4 text-center flex flex-col items-center justify-center",
+                      "rounded-2xl p-4 text-center flex flex-col items-center justify-center relative group",
                       selectedStudent.parentStatus === "Approved" ? "bg-green-50" : "bg-orange-50"
                     )}>
                       <div className={cn("text-sm font-bold", selectedStudent.parentStatus === "Approved" ? "text-green-600" : "text-orange-600")}>
                         {selectedStudent.parentStatus}
                       </div>
-                      <div className={cn("text-xs font-bold uppercase mt-1", selectedStudent.parentStatus === "Approved" ? "text-green-400" : "text-orange-400")}>Parent Consent</div>
+                      <div className={cn("text-xs font-bold uppercase mt-1 mb-2", selectedStudent.parentStatus === "Approved" ? "text-green-400" : "text-orange-400")}>Parent Consent</div>
+                      
+                      <input 
+                        type="file" 
+                        ref={consentFileInputRef} 
+                        onChange={handleConsentUpload} 
+                        accept="image/*,.pdf" 
+                        className="hidden" 
+                      />
+                      
+                      {selectedStudent.parentStatus === "Approved" && selectedStudent.parentConsentUrl ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          <a href={selectedStudent.parentConsentUrl} target="_blank" rel="noreferrer" className="text-[10px] font-black bg-green-200 text-green-800 px-3 py-1.5 rounded-full hover:bg-green-300 transition-colors flex items-center">
+                            <Eye className="w-3 h-3 mr-1" /> View
+                          </a>
+                          <button 
+                            onClick={() => consentFileInputRef.current?.click()}
+                            disabled={isUploadingConsent}
+                            className="text-[10px] font-black bg-white text-green-700 px-3 py-1.5 rounded-full border border-green-200 hover:bg-green-50 transition-colors"
+                          >
+                            {isUploadingConsent ? "..." : "Change"}
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => consentFileInputRef.current?.click()}
+                          disabled={isUploadingConsent}
+                          className="mt-1 flex items-center justify-center text-[11px] font-black bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl transition-all shadow-md shadow-orange-500/20"
+                        >
+                          {isUploadingConsent ? "Uploading..." : <><Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Form</>}
+                        </button>
+                      )}
                     </div>
                   </div>
 
