@@ -698,10 +698,6 @@ export default function Home() {
                   </motion.div>
                 )}
 
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-600 font-bold">
-                  💡 Default: username <code className="bg-blue-100 px-1 rounded">admin</code> / password <code className="bg-blue-100 px-1 rounded">admin123</code>
-                </div>
-
                 <motion.button
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   type="submit"
