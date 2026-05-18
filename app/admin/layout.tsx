@@ -4,7 +4,10 @@ import { useState } from "react";
 import { LayoutDashboard, Users, CalendarCheck, Bell, Settings, LogOut, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import Lottie from "lottie-react";
+import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLayout({
   children,
@@ -12,7 +15,38 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(true); // default true for initial load/refresh
+  const [animationData, setAnimationData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/lottie/Sandy Loading.json')
+      .then((res) => res.json())
+      .then((data) => setAnimationData(data))
+      .catch((err) => console.error("Failed to load Lottie:", err));
+  }, []);
+
+  // Handle initial load and refresh
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsNavigating(false);
+    }, 1500); // Spin for 1.5s on initial mount (login/refresh)
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleNavigation = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    if (pathname === href) return;
+    
+    setIsNavigating(true);
+    // Add artificial delay for the premium lottie to spin
+    setTimeout(() => {
+      router.push(href);
+      // Wait a tiny bit for the new page to render, then hide loader
+      setTimeout(() => setIsNavigating(false), 300);
+    }, 1200); // 1.2 seconds loading for premium feel
+  };
 
   const navigation = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -53,12 +87,13 @@ export default function AdminLayout({
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link
+              <a
                 key={item.name}
                 href={item.href}
+                onClick={(e) => handleNavigation(e, item.href)}
                 title={collapsed ? item.name : undefined}
                 className={cn(
-                  "flex items-center rounded-2xl font-medium transition-all group",
+                  "flex items-center rounded-2xl font-medium transition-all group cursor-pointer",
                   collapsed ? "px-0 py-3 justify-center" : "px-4 py-3",
                   isActive
                     ? "bg-purple-50 text-purple-600"
@@ -73,7 +108,7 @@ export default function AdminLayout({
                   )}
                 />
                 {!collapsed && <span>{item.name}</span>}
-              </Link>
+              </a>
             );
           })}
         </nav>
@@ -108,6 +143,41 @@ export default function AdminLayout({
           {children}
         </div>
       </main>
+
+      {/* Premium Global Loading Overlay */}
+      <AnimatePresence>
+        {isNavigating && (
+          <motion.div
+            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            animate={{ opacity: 1, backdropFilter: "blur(12px)" }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-transparent"
+          >
+            <div className="relative flex flex-col items-center justify-center p-12">
+              {animationData ? (
+                <Lottie
+                  animationData={animationData}
+                  loop={true}
+                  className="w-48 h-48 drop-shadow-2xl"
+                />
+              ) : (
+                <div className="w-48 h-48 flex items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-6 font-black text-xl bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text text-center"
+              >
+                Loading Awesomeness...
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

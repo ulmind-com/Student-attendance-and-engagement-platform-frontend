@@ -8,6 +8,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, User, KeyRound, Star, Heart, Zap, Lock, GraduationCap, Search, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Lottie from "lottie-react";
+import searchLottieData from "@/public/lottie/Search icon.json";
+import profileLottieData from "@/public/lottie/Profile.json";
 
 const floatingItems = [
   { emoji: "⭐", x: "8%", y: "15%", delay: 0, size: "text-3xl" },
@@ -493,17 +496,21 @@ export default function Home() {
                   <div className="relative">
                     <label className="text-xs font-black text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Your Name</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                      <div className="absolute inset-y-0 left-0 pl-1 flex items-center pointer-events-none z-10">
                         {selectedStudent?.profilePhoto ? (
-                          <img
-                            src={selectedStudent.profilePhoto}
-                            alt={selectedStudent.fullName || selectedStudent.firstName}
-                            className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
-                          />
+                          <div className="pl-3">
+                            <img
+                              src={selectedStudent.profilePhoto}
+                              alt={selectedStudent.fullName || selectedStudent.firstName}
+                              className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 shadow-sm"
+                            />
+                          </div>
                         ) : selectedStudent ? (
-                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          <div className="pl-3">
+                            <CheckCircle2 className="h-5 w-5 text-green-500" />
+                          </div>
                         ) : (
-                          <Search className="h-5 w-5 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
+                          <Lottie animationData={searchLottieData} loop={true} className="w-14 h-14 opacity-90 group-focus-within:opacity-100 transition-opacity drop-shadow-sm" />
                         )}
                       </div>
                       <input
@@ -517,7 +524,7 @@ export default function Home() {
                         }}
                         onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                         className={`w-full pr-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 border-2 border-slate-100 focus:border-purple-400 focus:bg-white rounded-2xl outline-none transition-all placeholder:text-slate-400 text-slate-800 font-bold text-sm sm:text-base shadow-sm ${
-                          selectedStudent?.profilePhoto ? "pl-14" : "pl-12"
+                          selectedStudent?.profilePhoto ? "pl-14" : selectedStudent ? "pl-12" : "pl-[3.8rem]"
                         }`}
                         placeholder="Start typing your name..."
                         autoComplete="off"
@@ -574,8 +581,8 @@ export default function Home() {
                   <div>
                     <label className="text-xs font-black text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Roll Number</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <User className="h-5 w-5 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Lottie animationData={profileLottieData} loop={true} className="w-7 h-7 opacity-70 group-focus-within:opacity-100 transition-opacity" />
                       </div>
                       <input
                         type="text"
@@ -594,8 +601,8 @@ export default function Home() {
                   <div>
                     <label className="text-xs font-black text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Daily Magic Code</label>
                     <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <KeyRound className="h-5 w-5 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <img src="/lottie/key.gif" alt="Key" className="w-9 h-9 opacity-80 group-focus-within:opacity-100 transition-opacity mix-blend-multiply scale-110" />
                       </div>
                       <OTPMaskInput
                         value={otp}
