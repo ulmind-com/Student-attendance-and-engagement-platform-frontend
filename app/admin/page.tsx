@@ -444,8 +444,11 @@ export default function AdminDashboard() {
                 className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all group cursor-pointer"
               >
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-200 to-pink-200 flex items-center justify-center font-black text-purple-700 flex-shrink-0">
-                  {student.name[0]}
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-200 to-pink-200 flex items-center justify-center font-black text-purple-700 flex-shrink-0 overflow-hidden">
+                  {student.profilePhoto
+                    ? <img src={student.profilePhoto} className="w-full h-full object-cover" alt={student.name} />
+                    : student.name[0]
+                  }
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">
