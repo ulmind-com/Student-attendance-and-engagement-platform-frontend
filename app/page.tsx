@@ -485,10 +485,13 @@ export default function Home() {
           >
             <VideoBoyMascot />
 
-            <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2rem] shadow-2xl shadow-purple-200/50 p-6 sm:p-8 relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-300/15 rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-400/15 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-pink-300/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="bg-white/80 backdrop-blur-2xl border border-white/60 rounded-[2rem] shadow-2xl shadow-purple-200/50 p-6 sm:p-8 relative">
+              {/* Background Blobs (Clipped) */}
+              <div className="absolute inset-0 overflow-hidden rounded-[2rem] pointer-events-none">
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-yellow-300/15 rounded-full blur-2xl" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-400/15 rounded-full blur-3xl" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-pink-300/5 rounded-full blur-3xl" />
+              </div>
 
               <div className="relative z-10">
                 <form onSubmit={handleStudentLogin} className="space-y-5">
