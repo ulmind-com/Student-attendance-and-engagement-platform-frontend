@@ -900,7 +900,7 @@ export default function StudentsPage() {
               <div className="flex-1 bg-slate-100 p-4 overflow-auto min-h-[50vh] flex items-center justify-center">
                 {viewDocumentUrl.toLowerCase().endsWith('.pdf') ? (
                   <iframe 
-                    src={`${viewDocumentUrl}#toolbar=0&navpanes=0`} 
+                    src={`https://docs.google.com/gview?url=${encodeURIComponent(viewDocumentUrl)}&embedded=true`} 
                     className="w-full h-full min-h-[60vh] rounded-xl shadow-inner border border-slate-200 bg-white"
                   />
                 ) : (
