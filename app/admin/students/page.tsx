@@ -661,7 +661,7 @@ export default function StudentsPage() {
                   <input type="file" accept="image/*" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    showToast("⏳ Uploading photo...");
+                    showSaveSuccess("⏳ Uploading photo...");
                     const fData = new FormData();
                     fData.append("file", file);
                     fData.append("upload_preset", "students_unsigned");
@@ -670,12 +670,12 @@ export default function StudentsPage() {
                       if (res.ok) {
                         const data = await res.json();
                         setFormData(prev => ({...prev, profilePhoto: data.secure_url}));
-                        showToast("✅ Photo uploaded!");
+                        showSaveSuccess("✅ Photo uploaded!");
                       } else {
                         const err = await res.json();
-                        showToast("❌ Upload failed: " + (err?.error?.message || "Try again"));
+                        showSaveSuccess("❌ Upload failed!");
                       }
-                    } catch (err) { showToast("❌ Upload error. Check connection."); }
+                    } catch (err) { showSaveSuccess("❌ Upload error."); }
                   }} className="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer w-full" />
                 </div>
               </div>
@@ -728,7 +728,7 @@ export default function StudentsPage() {
                   <input type="file" accept="image/*" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    showToast("⏳ Uploading photo...");
+                    showSaveSuccess("⏳ Uploading photo...");
                     const fData = new FormData();
                     fData.append("file", file);
                     fData.append("upload_preset", "students_unsigned");
@@ -737,12 +737,11 @@ export default function StudentsPage() {
                       if (res.ok) {
                         const data = await res.json();
                         setStudentToEdit(prev => prev ? {...prev, profilePhoto: data.secure_url} : null);
-                        showToast("✅ Photo uploaded!");
+                        showSaveSuccess("✅ Photo uploaded!");
                       } else {
-                        const err = await res.json();
-                        showToast("❌ Upload failed: " + (err?.error?.message || "Try again"));
+                        showSaveSuccess("❌ Upload failed!");
                       }
-                    } catch (err) { showToast("❌ Upload error. Check connection."); }
+                    } catch (err) { showSaveSuccess("❌ Upload error."); }
                   }} className="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer w-full" />
                 </div>
               </div>
