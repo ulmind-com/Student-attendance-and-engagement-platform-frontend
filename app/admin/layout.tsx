@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { LayoutDashboard, Users, CalendarCheck, Bell, Settings, LogOut, Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { LayoutDashboard, Users, CalendarCheck, Bell, Settings, LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Lottie from "lottie-react";
-import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLayout({
@@ -17,7 +16,8 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(true); // default true for initial load/refresh
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(true);
   const [animationData, setAnimationData] = useState<any>(null);
 
   useEffect(() => {
@@ -27,25 +27,27 @@ export default function AdminLayout({
       .catch((err) => console.error("Failed to load Lottie:", err));
   }, []);
 
-  // Handle initial load and refresh
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsNavigating(false);
-    }, 1500); // Spin for 1.5s on initial mount (login/refresh)
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleNavigation = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
     if (pathname === href) return;
-    
+    setMobileOpen(false);
     setIsNavigating(true);
-    // Add artificial delay for the premium lottie to spin
     setTimeout(() => {
       router.push(href);
-      // Wait a tiny bit for the new page to render, then hide loader
       setTimeout(() => setIsNavigating(false), 300);
-    }, 1200); // 1.2 seconds loading for premium feel
+    }, 1200);
   };
 
   const navigation = [
@@ -56,34 +58,166 @@ export default function AdminLayout({
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex font-outfit">
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "bg-white border-r border-slate-200 flex flex-col shadow-sm z-10 transition-all duration-300 ease-in-out",
-          collapsed ? "w-[72px]" : "w-64"
+  const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <>
+      {/* Header */}
+      <div className={cn(
+        "h-20 flex items-center border-b border-slate-100 transition-all duration-300 flex-shrink-0",
+        isMobile ? "px-5 justify-between" : collapsed ? "px-4 justify-center" : "px-6 justify-between"
+      )}>
+        {(isMobile || !collapsed) && (
+          <div className="text-[15px] font-black leading-tight bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
+            Student Attendance<br/>& Engagement
+          </div>
         )}
-      >
-        {/* Header with hamburger */}
-        <div className={cn(
-          "h-24 flex items-center border-b border-slate-100 transition-all duration-300",
-          collapsed ? "px-4 justify-center" : "px-6 justify-between"
-        )}>
-          {!collapsed && (
-            <div className="text-[17px] font-black leading-tight bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
-              Student Attendance<br/>& Engagement
-            </div>
-          )}
+        {isMobile ? (
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="flex-shrink-0 w-9 h-9 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-500 flex items-center justify-center text-slate-500 transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        ) : (
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="flex-shrink-0 w-9 h-9 rounded-xl bg-slate-100 hover:bg-purple-50 hover:text-purple-600 flex items-center justify-center text-slate-500 transition-all"
           >
             <Menu className="w-5 h-5" />
           </button>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+        {navigation.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <a
+              key={item.name}
+              href={item.href}
+              onClick={(e) => handleNavigation(e, item.href)}
+              title={(!isMobile && collapsed) ? item.name : undefined}
+              className={cn(
+                "flex items-center rounded-2xl font-medium transition-all group cursor-pointer",
+                (!isMobile && collapsed) ? "px-0 py-3.5 justify-center" : "px-4 py-3.5",
+                isActive
+                  ? "bg-purple-50 text-purple-600"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+              )}
+            >
+              <item.icon
+                className={cn(
+                  "h-5 w-5 flex-shrink-0 transition-colors",
+                  (!isMobile && collapsed) ? "" : "mr-3",
+                  isActive ? "text-purple-600" : "text-slate-400 group-hover:text-slate-600"
+                )}
+              />
+              {(isMobile || !collapsed) && <span className="text-[15px]">{item.name}</span>}
+              {isActive && (isMobile || !collapsed) && (
+                <div className="ml-auto w-1.5 h-5 rounded-full bg-purple-500" />
+              )}
+            </a>
+          );
+        })}
+      </nav>
+
+      {/* Sign Out */}
+      <div className="p-3 border-t border-slate-100 flex-shrink-0">
+        <Link
+          href="/"
+          title={(!isMobile && collapsed) ? "Sign Out" : undefined}
+          className={cn(
+            "flex items-center text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-2xl font-medium transition-all group",
+            (!isMobile && collapsed) ? "px-0 py-3.5 justify-center" : "px-4 py-3.5"
+          )}
+        >
+          <LogOut className={cn(
+            "h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-red-500",
+            (!isMobile && collapsed) ? "" : "mr-3"
+          )} />
+          {(isMobile || !collapsed) && <span className="text-[15px]">Sign Out</span>}
+        </Link>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex font-outfit">
+
+      {/* ── DESKTOP SIDEBAR ── */}
+      <aside
+        className={cn(
+          "hidden md:flex bg-white border-r border-slate-200 flex-col shadow-sm z-10 transition-all duration-300 ease-in-out",
+          collapsed ? "w-[72px]" : "w-64"
+        )}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* ── MOBILE SIDEBAR OVERLAY ── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm md:hidden"
+              onClick={() => setMobileOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.aside
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-2xl flex flex-col md:hidden"
+            >
+              <SidebarContent isMobile />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── MAIN CONTENT ── */}
+      <main className="flex-1 overflow-auto relative flex flex-col min-w-0">
+        {/* Subtle Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-purple-200/40 blur-3xl" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] rounded-full bg-blue-200/40 blur-3xl" />
         </div>
 
-        <nav className="flex-1 px-3 py-8 space-y-1">
+        {/* ── MOBILE TOP BAR ── */}
+        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-purple-50 flex items-center justify-center text-slate-600 transition-all active:scale-95"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="text-[14px] font-black bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
+            {navigation.find(n => n.href === pathname)?.name || "Admin Panel"}
+          </div>
+          {/* Active page icon */}
+          <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center">
+            {(() => {
+              const NavIcon = navigation.find(n => n.href === pathname)?.icon || LayoutDashboard;
+              return <NavIcon className="w-4 h-4 text-purple-600" />;
+            })()}
+          </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="p-4 md:p-8 flex-1">
+          {children}
+        </div>
+      </main>
+
+      {/* ── MOBILE BOTTOM NAV ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -91,60 +225,30 @@ export default function AdminLayout({
                 key={item.name}
                 href={item.href}
                 onClick={(e) => handleNavigation(e, item.href)}
-                title={collapsed ? item.name : undefined}
                 className={cn(
-                  "flex items-center rounded-2xl font-medium transition-all group cursor-pointer",
-                  collapsed ? "px-0 py-3 justify-center" : "px-4 py-3",
+                  "flex flex-col items-center justify-center gap-0.5 px-3 py-2 rounded-2xl transition-all active:scale-95 min-w-[56px]",
                   isActive
                     ? "bg-purple-50 text-purple-600"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    : "text-slate-400"
                 )}
               >
-                <item.icon
-                  className={cn(
-                    "h-5 w-5 flex-shrink-0 transition-colors",
-                    collapsed ? "" : "mr-3",
-                    isActive ? "text-purple-600" : "text-slate-400 group-hover:text-slate-600"
-                  )}
-                />
-                {!collapsed && <span>{item.name}</span>}
+                <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-purple-600" : "text-slate-400")} />
+                <span className={cn("text-[10px] font-bold tracking-tight", isActive ? "text-purple-600" : "text-slate-400")}>
+                  {item.name}
+                </span>
+                {isActive && (
+                  <motion.div layoutId="bottomNavIndicator" className="absolute bottom-1 w-1 h-1 rounded-full bg-purple-500" />
+                )}
               </a>
             );
           })}
-        </nav>
-
-        <div className="p-3 border-t border-slate-100">
-          <Link
-            href="/"
-            title={collapsed ? "Sign Out" : undefined}
-            className={cn(
-              "flex items-center text-slate-500 hover:bg-red-50 hover:text-red-600 rounded-2xl font-medium transition-all group",
-              collapsed ? "px-0 py-3 justify-center" : "px-4 py-3"
-            )}
-          >
-            <LogOut className={cn(
-              "h-5 w-5 flex-shrink-0 text-slate-400 group-hover:text-red-500",
-              collapsed ? "" : "mr-3"
-            )} />
-            {!collapsed && <span>Sign Out</span>}
-          </Link>
         </div>
-      </aside>
+      </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto relative">
-        {/* Subtle Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-          <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-purple-200/40 blur-3xl"></div>
-          <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] rounded-full bg-blue-200/40 blur-3xl"></div>
-        </div>
-        
-        <div className="p-8">
-          {children}
-        </div>
-      </main>
+      {/* Extra bottom padding on mobile for the bottom nav */}
+      <div className="md:hidden h-16 pointer-events-none" />
 
-      {/* Premium Global Loading Overlay */}
+      {/* ── PREMIUM LOADING OVERLAY ── */}
       <AnimatePresence>
         {isNavigating && (
           <motion.div
@@ -159,18 +263,18 @@ export default function AdminLayout({
                 <Lottie
                   animationData={animationData}
                   loop={true}
-                  className="w-48 h-48 drop-shadow-2xl"
+                  className="w-40 h-40 md:w-48 md:h-48 drop-shadow-2xl"
                 />
               ) : (
                 <div className="w-48 h-48 flex items-center justify-center">
-                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mt-6 font-black text-xl bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text text-center"
+                className="mt-6 font-black text-lg md:text-xl bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text text-center"
               >
                 Loading Awesomeness...
               </motion.div>

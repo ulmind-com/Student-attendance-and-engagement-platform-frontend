@@ -231,37 +231,37 @@ export default function StudentsPage() {
       </AnimatePresence>
 
       {/* Header & Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Student Profiles</h1>
-          <p className="text-slate-500 mt-1">Manage and track your students' wellness.</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Student Profiles</h1>
+          <p className="text-slate-500 mt-0.5 text-sm md:text-base">Manage and track your students' wellness.</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <button onClick={() => setIsCsvModalOpen(true)} className="flex items-center px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-colors">
-            <Upload className="w-4 h-4 mr-2" /> Import CSV
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button onClick={() => setIsCsvModalOpen(true)} className="flex items-center px-3 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-colors flex-1 sm:flex-none justify-center">
+            <Upload className="w-4 h-4 mr-1.5" /> CSV
           </button>
-          <button onClick={() => setIsAddModalOpen(true)} className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-xl font-bold text-sm shadow-md shadow-purple-600/20 hover:bg-purple-700 transition-colors">
-            <UserPlus className="w-4 h-4 mr-2" /> Add Student
+          <button onClick={() => setIsAddModalOpen(true)} className="flex items-center px-3 py-2 bg-purple-600 text-white rounded-xl font-bold text-sm shadow-md shadow-purple-600/20 hover:bg-purple-700 transition-colors flex-1 sm:flex-none justify-center">
+            <UserPlus className="w-4 h-4 mr-1.5" /> Add Student
           </button>
         </div>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 md:gap-3">
         {[
-          { label: "All Students", value: students.length, Icon: Users, color: "bg-blue-50 text-blue-600", tab: "all" as const },
+          { label: "All", value: students.length, Icon: Users, color: "bg-blue-50 text-blue-600", tab: "all" as const },
           { label: "Active", value: activeStudents.length, Icon: UserCheck, color: "bg-green-50 text-green-600", tab: "active" as const },
           { label: "Inactive", value: inactiveStudents.length, Icon: UserX, color: "bg-red-50 text-red-600", tab: "inactive" as const },
-          { label: "Today Present", value: todayRecords.length, Icon: CheckCircle2, color: "bg-purple-50 text-purple-600", tab: "today" as const },
+          { label: "Present", value: todayRecords.length, Icon: CheckCircle2, color: "bg-purple-50 text-purple-600", tab: "today" as const },
           { label: "Calendar", value: attendanceDates.length + "d", Icon: Calendar, color: "bg-amber-50 text-amber-600", tab: "calendar" as const },
         ].map(s => (
           <motion.button key={s.tab} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => setActiveTab(s.tab)}
-            className={cn("rounded-2xl p-4 text-center transition-all border-2", activeTab === s.tab ? "border-purple-400 shadow-lg shadow-purple-100 bg-white" : "border-transparent " + s.color.split(" ")[0])}
+            className={cn("rounded-xl md:rounded-2xl p-2.5 md:p-4 text-center transition-all border-2", activeTab === s.tab ? "border-purple-400 shadow-lg shadow-purple-100 bg-white" : "border-transparent " + s.color.split(" ")[0])}
           >
-            <s.Icon className={cn("w-5 h-5 mx-auto mb-1", s.color.split(" ")[1])} />
-            <div className={cn("text-xl font-black", s.color.split(" ")[1])}>{s.value}</div>
-            <div className="text-[10px] font-bold text-slate-500 uppercase">{s.label}</div>
+            <s.Icon className={cn("w-4 h-4 mx-auto mb-0.5", s.color.split(" ")[1])} />
+            <div className={cn("text-lg md:text-xl font-black", s.color.split(" ")[1])}>{s.value}</div>
+            <div className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase leading-tight">{s.label}</div>
           </motion.button>
         ))}
       </div>
@@ -391,47 +391,43 @@ export default function StudentsPage() {
               </div>
             ) : paginatedStudents.map((student) => (
               <motion.div key={student.id || student.rollNumber} whileHover={{ scale: 1.01 }} onClick={() => setSelectedStudent(student)}
-                className={cn("glass-card p-4 border-none cursor-pointer transition-all duration-300",
+                className={cn("glass-card p-3 md:p-4 border-none cursor-pointer transition-all duration-300",
                   student.status === "inactive" && "opacity-60",
                   selectedStudent?.rollNumber === student.rollNumber ? "ring-2 ring-purple-500 bg-white/90 shadow-lg" : "bg-white/60 hover:bg-white/80"
                 )}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3">
                     {student.profilePhoto ? (
-                      <img src={student.profilePhoto} alt={student.firstName} className="w-12 h-12 rounded-full object-cover shadow-inner" />
+                      <img src={student.profilePhoto} alt={student.firstName} className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-inner flex-shrink-0" />
                     ) : (
-                      <div className={cn("w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-inner",
+                      <div className={cn("w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-base md:text-lg shadow-inner flex-shrink-0",
                         student.status === "inactive" ? "bg-slate-200 text-slate-500" : "bg-gradient-to-tr from-purple-200 to-pink-200 text-purple-700"
                       )}>{student.firstName[0]}</div>
                     )}
-                    <div>
-                      <h3 className="font-bold text-slate-800 text-lg">{student.firstName} {student.lastInitial}
-                        {student.status === "inactive" && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black">INACTIVE</span>}
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-800 text-sm md:text-base truncate">{student.firstName} {student.lastInitial}
+                        {student.status === "inactive" && <span className="ml-1 text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full font-black">OFF</span>}
                       </h3>
-                      <p className="text-sm text-slate-500">Roll: {student.rollNumber} • {student.class_name || student.class}</p>
+                      <p className="text-xs text-slate-500 truncate">Roll: {student.rollNumber} • {student.class_name || student.class}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-
-                    <div className="text-right hidden sm:block">
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="text-right hidden sm:block mr-2">
                       <div className="text-sm font-bold text-slate-700">{student.attendance}%</div>
-                      <div className="text-xs text-slate-400">Attendance</div>
+                      <div className="text-xs text-slate-400">Att.</div>
                     </div>
-                    <div className="flex space-x-1">
-                      <button onClick={(e) => { e.stopPropagation(); toggleStatus(student.rollNumber); }}
-                        className={cn("p-2 rounded-lg transition-colors", student.status === "inactive" ? "hover:bg-green-100" : "hover:bg-orange-100")}
-                        title={student.status === "inactive" ? "Activate" : "Deactivate"}>
-                        {student.status === "inactive" ? <UserCheck className="w-4 h-4 text-green-600" /> : <UserX className="w-4 h-4 text-orange-500" />}
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); setStudentToEdit(student); setIsEditModalOpen(true); }}
-                        className="p-2 hover:bg-purple-100 rounded-lg transition-colors" title="Edit">
-                        <MoreVertical className="w-5 h-5 text-slate-400 hover:text-purple-600" />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.rollNumber); }}
-                        className="p-2 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
-                        <X className="w-5 h-5 text-slate-400 hover:text-red-600" />
-                      </button>
-                    </div>
+                    <button onClick={(e) => { e.stopPropagation(); toggleStatus(student.rollNumber); }}
+                      className={cn("p-1.5 rounded-lg transition-colors", student.status === "inactive" ? "hover:bg-green-100" : "hover:bg-orange-100")}>
+                      {student.status === "inactive" ? <UserCheck className="w-4 h-4 text-green-600" /> : <UserX className="w-4 h-4 text-orange-500" />}
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setStudentToEdit(student); setIsEditModalOpen(true); }}
+                      className="p-1.5 hover:bg-purple-100 rounded-lg transition-colors">
+                      <MoreVertical className="w-4 h-4 text-slate-400 hover:text-purple-600" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.rollNumber); }}
+                      className="p-1.5 hover:bg-red-100 rounded-lg transition-colors">
+                      <X className="w-4 h-4 text-slate-400 hover:text-red-600" />
+                    </button>
                   </div>
                 </div>
               </motion.div>

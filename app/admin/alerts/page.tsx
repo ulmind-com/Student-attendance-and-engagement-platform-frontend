@@ -386,20 +386,20 @@ export default function AlertsPage() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800 flex items-center gap-2">
             Smart Alerts
             {activeAlerts.length > 0 && (
-              <span className="ml-3 bg-red-100 text-red-600 text-sm font-bold px-3 py-1 rounded-full animate-pulse">
+              <span className="bg-red-100 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full animate-pulse">
                 {activeAlerts.length} Active
               </span>
             )}
           </h1>
-          <p className="text-slate-500 mt-1">Emotionally intelligent notifications requiring attention.</p>
+          <p className="text-slate-500 mt-0.5 text-sm">Emotionally intelligent notifications requiring attention.</p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <div className="relative z-50">
             <Search className="w-4 h-4 absolute left-3 top-3.5 text-slate-400"/>
             <input 
@@ -413,7 +413,7 @@ export default function AlertsPage() {
               onFocus={() => {
                 if (searchQuery.trim().length > 0) setShowDropdown(true);
               }}
-              className="pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-64 transition-all shadow-sm font-medium"
+              className="pl-9 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-56 transition-all shadow-sm font-medium"
             />
             {isSearching && (
               <Loader2 className="w-4 h-4 absolute right-3 top-3.5 text-purple-500 animate-spin" />
@@ -578,10 +578,10 @@ export default function AlertsPage() {
                     </div>
                   ) : null}
 
-                  <div className="flex items-start space-x-4">
+                  <div className="flex items-start gap-3">
                     {/* Avatar / Photo */}
                     <div className="relative flex-shrink-0">
-                      <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center font-bold text-slate-700 text-2xl shadow-sm border border-slate-100 overflow-hidden">
+                      <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center font-bold text-slate-700 text-xl shadow-sm border border-slate-100 overflow-hidden flex-shrink-0">
                         {alert.profilePhoto
                           ? <img src={alert.profilePhoto} className="w-full h-full object-cover" alt={alert.student} />
                           : <span className="text-2xl">{isResolved ? "😊" : alert.emoji}</span>
@@ -646,24 +646,24 @@ export default function AlertsPage() {
                         </div>
                       ) : (
                         /* Actions */
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => setReviewModal(alert)}
-                            className="flex items-center px-4 py-2 bg-slate-800 text-white rounded-xl text-sm font-bold hover:bg-slate-700 transition-all active:scale-95 shadow-sm"
+                            className="flex items-center px-3 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition-all active:scale-95"
                           >
-                            <FileEdit className="w-4 h-4 mr-2" /> Review & Note
+                            <FileEdit className="w-3.5 h-3.5 mr-1.5" /> Review
                           </button>
                           <button
                             onClick={() => setContactModal(alert)}
-                            className="flex items-center px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all active:scale-95"
+                            className="flex items-center px-3 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-all active:scale-95"
                           >
-                            <MessageCircle className="w-4 h-4 mr-2" /> Contact Parent
+                            <MessageCircle className="w-3.5 h-3.5 mr-1.5" /> Parent
                           </button>
                           <button
                             onClick={() => handleMarkResolved(alert.id, alert.date)}
-                            className="flex items-center px-4 py-2 text-green-600 bg-green-50 border border-green-100 hover:bg-green-100 rounded-xl text-sm font-bold transition-all active:scale-95 ml-auto"
+                            className="flex items-center px-3 py-2 text-green-600 bg-green-50 border border-green-100 hover:bg-green-100 rounded-xl text-xs font-bold transition-all active:scale-95 ml-auto"
                           >
-                            <CheckCircle2 className="w-4 h-4 mr-2" /> Mark Resolved
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" /> Resolved
                           </button>
                         </div>
                       )}

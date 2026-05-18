@@ -291,26 +291,24 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
       {/* ── HEADER ── */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <motion.h1
             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-black text-slate-800 tracking-tight"
+            className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight"
           >
-            {getGreeting()}, Teacher <span className="inline-flex ml-1">{(() => { const G = getGreetingIcon(); return <G className="w-8 h-8 text-amber-500 inline" />; })()}</span>
+            {getGreeting()}, Teacher <span className="inline-flex ml-1">{(() => { const G = getGreetingIcon(); return <G className="w-6 h-6 md:w-8 md:h-8 text-amber-500 inline" />; })()}</span>
           </motion.h1>
-          <p className="text-slate-500 mt-1 font-medium">Here is the emotional wellness summary for today.</p>
+          <p className="text-slate-500 mt-0.5 font-medium text-sm md:text-base">Here is the emotional wellness summary for today.</p>
         </div>
 
         {/* Live Clock */}
-        <div className="flex items-center gap-4">
-          <div className="bg-white rounded-2xl px-5 py-3 shadow-sm border border-slate-100 text-right">
-            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              {time ? time.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "\u00a0"}
-            </div>
-            <div className="text-2xl font-black text-slate-800 font-mono tracking-widest" suppressHydrationWarning>
-              {time ? time.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:-- --"}
-            </div>
+        <div className="w-full sm:w-auto bg-white rounded-2xl px-4 py-2.5 shadow-sm border border-slate-100 text-right">
+          <div className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">
+            {time ? time.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "short", day: "numeric", month: "short" }) : "\u00a0"}
+          </div>
+          <div className="text-lg md:text-2xl font-black text-slate-800 font-mono tracking-widest" suppressHydrationWarning>
+            {time ? time.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:-- --"}
           </div>
         </div>
       </div>
@@ -339,32 +337,32 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── STAT CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {statCards.map((card, i) => (
           <motion.div
             key={card.title}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-            whileHover={{ y: -6, scale: 1.02 }}
+            whileHover={{ y: -4, scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => card.modalKey && setActiveModal(card.modalKey)}
             className={cn(
-              `relative overflow-hidden bg-gradient-to-br ${card.gradient} rounded-3xl p-5 text-white shadow-xl ${card.glow}`,
+              `relative overflow-hidden bg-gradient-to-br ${card.gradient} rounded-2xl md:rounded-3xl p-4 md:p-5 text-white shadow-xl ${card.glow}`,
               card.modalKey ? "cursor-pointer" : "cursor-default"
             )}
           >
             <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 -translate-y-8 translate-x-8 blur-xl" />
             {card.modalKey && (
-              <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                 <ArrowRight className="w-3 h-3 text-white" />
               </div>
             )}
             <div className="relative z-10">
-              <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm">
-                <card.icon className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-4 backdrop-blur-sm">
+                <card.icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-              <div className="text-4xl font-black mb-1">{card.value}</div>
-              <div className="font-bold text-sm text-white/90">{card.title}</div>
-              <div className="text-xs text-white/70 mt-0.5">{card.sub}</div>
+              <div className="text-2xl md:text-4xl font-black mb-0.5 md:mb-1">{card.value}</div>
+              <div className="font-bold text-xs md:text-sm text-white/90 leading-tight">{card.title}</div>
+              <div className="text-[10px] md:text-xs text-white/70 mt-0.5">{card.sub}</div>
             </div>
           </motion.div>
         ))}
