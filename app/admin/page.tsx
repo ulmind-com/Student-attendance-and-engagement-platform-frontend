@@ -429,7 +429,7 @@ export default function AdminDashboard() {
             </h2>
             <span className="text-xs font-bold text-slate-400">{totalStudents} students</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {liveCheckins.length === 0 ? (
               <div className="text-center text-slate-400 py-8">
                 <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-30" />
@@ -439,41 +439,51 @@ export default function AdminDashboard() {
               <motion.div
                 key={student.id}
                 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all group cursor-pointer"
+                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 transition-all cursor-pointer"
               >
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-200 to-pink-200 flex items-center justify-center font-black text-purple-700 flex-shrink-0 overflow-hidden">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-200 to-pink-200 flex items-center justify-center font-black text-purple-700 flex-shrink-0 overflow-hidden text-sm">
                   {student.profilePhoto
                     ? <img src={student.profilePhoto} className="w-full h-full object-cover" alt={student.name} />
                     : student.name[0]
                   }
                 </div>
-                {/* Info */}
+                {/* Info — takes remaining space, truncates */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-slate-800 text-sm">{student.name}</span>
-                    <span className="text-xs text-slate-400">Roll: {student.roll}</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="font-black text-slate-800 text-sm truncate">{student.name}</span>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0">#{student.roll}</span>
                   </div>
-                  <div className="text-xs text-slate-500">{student.class}</div>
+                  <div className="text-[10px] text-slate-400 truncate">{student.class}</div>
                 </div>
-                {/* Emoji + Score */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{student.emoji}</span>
+                {/* Right side: emoji + score + badge — fixed width, no overflow */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className="text-lg leading-none">{student.emoji}</span>
                   {student.checkedIn ? (
-                    <div className={cn("text-sm font-black", student.score >= 7 ? "text-green-500" : student.score >= 4 ? "text-orange-500" : "text-red-500")}>
+                    <span className={cn("text-xs font-black tabular-nums", student.score >= 7 ? "text-green-500" : student.score >= 4 ? "text-orange-500" : "text-red-500")}>
                       {student.score}/10
-                    </div>
+                    </span>
                   ) : (
-                    <span className="text-xs font-bold text-slate-300 bg-slate-100 px-2 py-0.5 rounded-full">Not checked in</span>
+                    <span className="text-[10px] font-bold text-slate-300 bg-slate-100 px-1.5 py-0.5 rounded-full whitespace-nowrap">—</span>
                   )}
                   <div className={cn(
-                    "px-2 py-0.5 rounded-full text-xs font-black flex-shrink-0",
+                    "px-1.5 py-0.5 rounded-full text-[9px] font-black flex-shrink-0 hidden sm:flex items-center gap-0.5",
                     student.risk === "Stable" ? "bg-green-100 text-green-600" :
                     student.risk === "Needs Attention" ? "bg-orange-100 text-orange-600" :
                     "bg-red-100 text-red-600"
                   )}>
-                    {student.risk === "Stable" ? <ShieldCheck className="w-3 h-3 inline mr-0.5" /> : <ShieldAlert className="w-3 h-3 inline mr-0.5" />}
-                    {student.risk}
+                    {student.risk === "Stable" ? <ShieldCheck className="w-2.5 h-2.5" /> : <ShieldAlert className="w-2.5 h-2.5" />}
+                    <span className="hidden md:inline">{student.risk}</span>
+                  </div>
+                  {/* Mobile: just icon for risk */}
+                  <div className={cn(
+                    "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 sm:hidden",
+                    student.risk === "Stable" ? "bg-green-100" : student.risk === "Needs Attention" ? "bg-orange-100" : "bg-red-100"
+                  )}>
+                    {student.risk === "Stable"
+                      ? <ShieldCheck className="w-3 h-3 text-green-600" />
+                      : <ShieldAlert className="w-3 h-3 text-red-500" />
+                    }
                   </div>
                 </div>
               </motion.div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Building2, Palette, Users, KeyRound, MessageSquare, BellRing, Shield, Sparkles, SlidersHorizontal } from "lucide-react";
+import { Building2, Palette, Users, KeyRound, MessageSquare, BellRing, Shield, Sparkles, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SchoolInfoPanel from "./panels/SchoolInfoPanel";
 import BrandingPanel from "./panels/BrandingPanel";
@@ -16,16 +16,16 @@ import AdvancedPanel from "./panels/AdvancedPanel";
 import AdminUsersPanel from "./panels/AdminUsersPanel";
 
 const tabs = [
-  { id: "school",        icon: Building2,        label: "School Info",          color: "from-blue-500 to-cyan-500" },
-  { id: "branding",      icon: Palette,          label: "Branding & Theme",     color: "from-purple-500 to-pink-500" },
-  { id: "users",         icon: Users,            label: "Classes & Users",      color: "from-green-500 to-teal-500" },
-  { id: "admins",        icon: Shield,           label: "Admin Accounts",       color: "from-violet-600 to-purple-700" },
-  { id: "otp",           icon: KeyRound,         label: "OTP Settings",         color: "from-orange-500 to-yellow-500" },
-  { id: "wellness",      icon: MessageSquare,    label: "Emotional Questions",  color: "from-rose-500 to-pink-500" },
-  { id: "notifications", icon: BellRing,         label: "Notifications",        color: "from-violet-500 to-purple-500" },
-  { id: "security",      icon: Shield,           label: "Privacy & Security",   color: "from-red-500 to-rose-500" },
-  { id: "ai",            icon: Sparkles,         label: "AI Insights",          color: "from-indigo-500 to-blue-500" },
-  { id: "advanced",      icon: SlidersHorizontal,label: "Advanced",             color: "from-slate-600 to-slate-800" },
+  { id: "school",        icon: Building2,         label: "School Info",         color: "from-blue-500 to-cyan-500" },
+  { id: "branding",      icon: Palette,           label: "Branding & Theme",    color: "from-purple-500 to-pink-500" },
+  { id: "users",         icon: Users,             label: "Classes & Users",     color: "from-green-500 to-teal-500" },
+  { id: "admins",        icon: Shield,            label: "Admin Accounts",      color: "from-violet-600 to-purple-700" },
+  { id: "otp",           icon: KeyRound,          label: "OTP Settings",        color: "from-orange-500 to-yellow-500" },
+  { id: "wellness",      icon: MessageSquare,     label: "Emotional Questions", color: "from-rose-500 to-pink-500" },
+  { id: "notifications", icon: BellRing,          label: "Notifications",       color: "from-violet-500 to-purple-500" },
+  { id: "security",      icon: Shield,            label: "Privacy & Security",  color: "from-red-500 to-rose-500" },
+  { id: "ai",            icon: Sparkles,          label: "AI Insights",         color: "from-indigo-500 to-blue-500" },
+  { id: "advanced",      icon: SlidersHorizontal, label: "Advanced",            color: "from-slate-600 to-slate-800" },
 ];
 
 const panelMap: Record<string, React.ComponentType> = {
@@ -43,26 +43,91 @@ const panelMap: Record<string, React.ComponentType> = {
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("school");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const ActivePanel = panelMap[activeTab];
   const activeTabData = tabs.find(t => t.id === activeTab)!;
 
+  const handleTabChange = (id: string) => {
+    setActiveTab(id);
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] gap-6">
+    <div className="flex flex-col gap-4 md:gap-6 min-h-0">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Platform Settings</h1>
-        <p className="text-slate-500 mt-1 font-medium">Configure every aspect of your emotional wellness platform.</p>
+        <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Platform Settings</h1>
+        <p className="text-slate-500 mt-0.5 text-sm md:text-base font-medium">Configure every aspect of your emotional wellness platform.</p>
       </div>
 
-      <div className="flex flex-1 gap-6 overflow-hidden">
+      {/* ── MOBILE: Dropdown selector ── */}
+      <div className="md:hidden relative z-20">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={cn(
+            "w-full flex items-center justify-between px-4 py-3.5 rounded-2xl text-white font-bold shadow-lg transition-all",
+            `bg-gradient-to-r ${activeTabData.color}`
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <activeTabData.icon className="w-5 h-5 text-white/90" />
+            <span>{activeTabData.label}</span>
+          </div>
+          <motion.div animate={{ rotate: mobileMenuOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronDown className="w-5 h-5 text-white/80" />
+          </motion.div>
+        </button>
+
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
+              transition={{ duration: 0.18 }}
+              className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden"
+            >
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold transition-all",
+                      isActive
+                        ? "bg-slate-50 text-slate-900"
+                        : "text-slate-600 hover:bg-slate-50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-r flex-shrink-0",
+                      tab.color
+                    )}>
+                      <tab.icon className="w-4 h-4 text-white" />
+                    </div>
+                    <span>{tab.label}</span>
+                    {isActive && (
+                      <div className={cn("ml-auto w-2 h-2 rounded-full bg-gradient-to-r", tab.color)} />
+                    )}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ── DESKTOP: Sidebar layout ── */}
+      <div className="hidden md:flex flex-1 gap-6 overflow-hidden" style={{ height: "calc(100vh - 13rem)" }}>
         {/* Left Nav */}
-        <div className="w-60 flex-shrink-0 flex flex-col gap-1 overflow-y-auto pb-4">
+        <div className="w-56 flex-shrink-0 flex flex-col gap-1 overflow-y-auto pb-4">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <motion.button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.97 }}
                 className={cn(
@@ -95,9 +160,7 @@ export default function SettingsPage() {
 
         {/* Right Content */}
         <div className="flex-1 overflow-hidden rounded-3xl bg-white/70 backdrop-blur-xl border border-white/60 shadow-xl shadow-slate-200/50">
-          {/* Panel Header Strip */}
           <div className={cn("h-1.5 w-full bg-gradient-to-r", activeTabData.color)} />
-          
           <div className="h-full overflow-y-auto p-8">
             <AnimatePresence mode="wait">
               <motion.div
@@ -106,7 +169,26 @@ export default function SettingsPage() {
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -16, filter: "blur(4px)" }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
-                className="h-full"
+              >
+                <ActivePanel />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MOBILE: Panel content below dropdown ── */}
+      <div className="md:hidden">
+        <div className="rounded-3xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-xl shadow-slate-200/50 overflow-hidden">
+          <div className={cn("h-1.5 w-full bg-gradient-to-r", activeTabData.color)} />
+          <div className="p-5">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               >
                 <ActivePanel />
               </motion.div>
