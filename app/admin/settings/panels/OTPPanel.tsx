@@ -292,11 +292,11 @@ export default function OTPPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-2xl w-max shadow-inner">
-        <button onClick={() => setActiveTab("manage")} className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2", activeTab === "manage" ? "bg-white text-orange-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
+      <div className="flex bg-slate-100 p-1 rounded-2xl shadow-inner gap-1">
+        <button onClick={() => setActiveTab("manage")} className={cn("flex-1 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2", activeTab === "manage" ? "bg-white text-orange-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
           <KeyRound className="w-4 h-4" /> Manage OTPs
         </button>
-        <button onClick={() => setActiveTab("history")} className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2", activeTab === "history" ? "bg-white text-orange-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
+        <button onClick={() => setActiveTab("history")} className={cn("flex-1 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2", activeTab === "history" ? "bg-white text-orange-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
           <History className="w-4 h-4" /> OTP History
         </button>
       </div>
@@ -463,14 +463,51 @@ export default function OTPPanel() {
             </div>
           </SettingsCard>
 
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2">
             <h3 className="font-black text-slate-800 flex items-center gap-2"><Users className="w-5 h-5 text-orange-500" /> Students ({filteredStudents.length})</h3>
-            <button onClick={handlePrint} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-2 text-sm transition-all shadow-sm">
-              <Printer className="w-4 h-4" /> Print PDF (Letter Size)
+            <button onClick={handlePrint} className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-2 text-xs md:text-sm transition-all shadow-sm">
+              <Printer className="w-4 h-4" /> Print PDF
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-3">
+            {filteredStudents.map(student => (
+              <div key={student.rollNumber} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 overflow-hidden shadow-inner flex-shrink-0">
+                    {student.profilePhoto ? <img src={student.profilePhoto} className="w-full h-full object-cover" /> : student.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-black text-slate-800 text-sm truncate">{student.name}</div>
+                    <div className="text-xs text-slate-400 font-medium">{student.className} - {student.section} · Roll: {student.rollNumber}</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">Magic Code</div>
+                    <span className="font-mono text-xl font-black tracking-widest text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200/50">
+                      {student.otp?.code || "----"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {student.otp?.used ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full"><CheckCircle2 className="w-3 h-3" /> Terminated</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold bg-green-100 text-green-600 px-2 py-1 rounded-full"><ShieldAlert className="w-3 h-3" /> Active</span>
+                    )}
+                    <button onClick={() => handleGenerateStudent(student.rollNumber)} className="text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition-colors">
+                      Regenerate
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filteredStudents.length === 0 && <p className="text-center text-slate-400 font-bold py-8">No students found.</p>}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase font-black text-slate-500">
@@ -516,9 +553,7 @@ export default function OTPPanel() {
                     </motion.tr>
                   ))}
                   {filteredStudents.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-400 font-bold">No students found.</td>
-                    </tr>
+                    <tr><td colSpan={6} className="p-8 text-center text-slate-400 font-bold">No students found.</td></tr>
                   )}
                 </AnimatePresence>
               </tbody>

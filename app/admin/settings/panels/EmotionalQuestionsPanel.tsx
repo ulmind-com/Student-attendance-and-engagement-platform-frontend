@@ -114,12 +114,12 @@ export default function EmotionalQuestionsPanel() {
 
       <SectionHeader title="Dynamic Emotional Questions" description="Manage targeted daily check-in questions and view student responses." />
 
-      <div className="flex bg-slate-100 p-1 rounded-2xl w-max shadow-inner">
-        <button onClick={() => setActiveTab("manage")} className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2", activeTab === "manage" ? "bg-white text-rose-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
+      <div className="flex bg-slate-100 p-1 rounded-2xl shadow-inner gap-1">
+        <button onClick={() => setActiveTab("manage")} className={cn("flex-1 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2", activeTab === "manage" ? "bg-white text-rose-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
           <ListChecks className="w-4 h-4" /> Question Bank
         </button>
-        <button onClick={() => setActiveTab("history")} className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2", activeTab === "history" ? "bg-white text-rose-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
-          <History className="w-4 h-4" /> Daily Response History
+        <button onClick={() => setActiveTab("history")} className={cn("flex-1 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center justify-center gap-2", activeTab === "history" ? "bg-white text-rose-600 shadow-sm" : "text-slate-500 hover:text-slate-700")} >
+          <History className="w-4 h-4" /> Daily Responses
         </button>
       </div>
 
@@ -132,11 +132,11 @@ export default function EmotionalQuestionsPanel() {
             
             <div className="space-y-3 mb-8">
               {questions.map((q, i) => (
-                <div key={q.id} className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${q.enabled ? "bg-white border-slate-200 shadow-sm" : "bg-slate-50 border-slate-100 opacity-60"}`}>
-                  <GripVertical className="w-5 h-5 text-slate-300 cursor-grab flex-shrink-0" />
+                <div key={q.id} className={`flex items-start gap-3 p-3 md:p-4 rounded-2xl border transition-all ${q.enabled ? "bg-white border-slate-200 shadow-sm" : "bg-slate-50 border-slate-100 opacity-60"}`}>
+                  <GripVertical className="w-5 h-5 text-slate-300 cursor-grab flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-base font-bold text-slate-800 truncate">{q.text}</div>
-                    <div className="flex gap-2 mt-1.5">
+                    <div className="text-sm md:text-base font-bold text-slate-800">{q.text}</div>
+                    <div className="flex flex-wrap gap-2 mt-1.5">
                       <span className={cn("text-xs font-black uppercase tracking-widest px-2 py-0.5 rounded-md", 
                         q.targetType === "global" ? "bg-blue-50 text-blue-600" : 
                         q.targetType === "class" ? "bg-purple-50 text-purple-600" : "bg-orange-50 text-orange-600"
@@ -144,11 +144,11 @@ export default function EmotionalQuestionsPanel() {
                         {q.targetType}
                       </span>
                       {q.targetValue && (
-                        <span className="text-xs font-bold text-slate-500">
+                        <span className="text-xs font-bold text-slate-500 truncate max-w-[150px]">
                           {q.targetType === "student" ? (
                             (() => {
                               const s = students.find(x => x.rollNumber === q.targetValue);
-                              if (s) return `${s.name} (${s.className} - ${s.section}) • Roll: ${s.rollNumber}`;
+                              if (s) return `${s.name} • Roll: ${s.rollNumber}`;
                               return `Roll: ${q.targetValue}`;
                             })()
                           ) : (
@@ -162,7 +162,7 @@ export default function EmotionalQuestionsPanel() {
                     <button onClick={() => toggleQ(q.id)} className={`w-11 h-6 rounded-full transition-all relative ${q.enabled ? "bg-rose-500" : "bg-slate-300"}`}>
                       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${q.enabled ? "right-1" : "left-1"}`} />
                     </button>
-                    <button onClick={() => deleteQ(q.id)} className="p-2 hover:bg-red-50 rounded-xl ml-1 transition-colors">
+                    <button onClick={() => deleteQ(q.id)} className="p-2 hover:bg-red-50 rounded-xl transition-colors">
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   </div>

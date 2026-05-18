@@ -66,16 +66,16 @@ export default function BrandingPanel() {
       <SectionHeader title="Student Emotion Colors" description="Customize the exact colors students see during their check-ins." />
 
       {/* Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-2xl w-max shadow-inner">
+      <div className="flex flex-wrap bg-slate-100 p-1 rounded-2xl shadow-inner gap-1">
         <button
           onClick={() => setActiveTab("clock")}
-          className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all", activeTab === "clock" ? "bg-white text-purple-700 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+          className={cn("flex-1 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all", activeTab === "clock" ? "bg-white text-purple-700 shadow-sm" : "text-slate-500 hover:text-slate-700")}
         >
           How Are You Feeling? (1-10)
         </button>
         <button
           onClick={() => setActiveTab("puzzle")}
-          className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all", activeTab === "puzzle" ? "bg-white text-purple-700 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+          className={cn("flex-1 px-4 py-2.5 rounded-xl font-bold text-xs md:text-sm transition-all", activeTab === "puzzle" ? "bg-white text-purple-700 shadow-sm" : "text-slate-500 hover:text-slate-700")}
         >
           Color In Your Emotion
         </button>
