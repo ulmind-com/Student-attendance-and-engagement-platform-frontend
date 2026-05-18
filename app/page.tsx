@@ -255,7 +255,8 @@ export default function Home() {
   }, []);
 
   const selectStudent = (s: any) => {
-    setStudentName(s.fullName || s.name || "");
+    const formattedName = `${s.firstName || ""} ${s.lastInitial ? s.lastInitial.charAt(0) : ""}`.trim();
+    setStudentName(formattedName || s.name || "");
     setRollNumber(s.rollNumber);
     setSelectedStudent(s);
     setShowSuggestions(false);
@@ -568,7 +569,9 @@ export default function Home() {
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-black text-slate-700 truncate">{s.fullName || s.name}</p>
+                                  <p className="text-sm font-black text-slate-700 truncate">
+                                    {`${s.firstName || ""} ${s.lastInitial ? s.lastInitial.charAt(0) : ""}`.trim() || s.name}
+                                  </p>
                                   <p className="text-[11px] font-bold text-slate-400">Roll: {s.rollNumber} · {s.className || s.class_name}</p>
                                 </div>
                                 <ArrowRight className="w-4 h-4 text-slate-300 group-hover/item:text-purple-500 transition-colors" />
