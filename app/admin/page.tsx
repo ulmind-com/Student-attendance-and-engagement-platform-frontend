@@ -306,10 +306,10 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-4">
           <div className="bg-white rounded-2xl px-5 py-3 shadow-sm border border-slate-100 text-right">
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              {time ? time.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "\u00a0"}
+              {time ? time.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "\u00a0"}
             </div>
             <div className="text-2xl font-black text-slate-800 font-mono tracking-widest" suppressHydrationWarning>
-              {time ? time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:-- --"}
+              {time ? time.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:-- --"}
             </div>
           </div>
         </div>

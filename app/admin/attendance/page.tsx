@@ -114,7 +114,9 @@ export default function AttendancePage() {
         emoji: todayEntry.emoji,
         score: todayEntry.score,
         time: "Just now", 
-        status: "Present"
+        status: "Present",
+        profilePhoto: s.profilePhoto,
+        initial: s.firstName[0]
       };
     }).reverse();
 
@@ -365,8 +367,11 @@ export default function AttendancePage() {
                     key={checkin.id}
                     className="flex items-center p-3 bg-white/50 border border-white/60 rounded-2xl shadow-sm"
                   >
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-2xl mr-3 shadow-inner">
-                      {checkin.emoji}
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-2xl mr-3 shadow-inner overflow-hidden flex-shrink-0 relative">
+                      {checkin.profilePhoto
+                        ? <img src={checkin.profilePhoto} className="w-full h-full object-cover" alt={checkin.name} />
+                        : <span className="font-black text-slate-500 text-sm">{checkin.initial}</span>
+                      }
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between items-center">

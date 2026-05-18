@@ -579,12 +579,19 @@ export default function AlertsPage() {
                   ) : null}
 
                   <div className="flex items-start space-x-4">
-                    {/* Avatar / Emoji */}
-                    <div className="relative">
-                      <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center font-bold text-slate-700 text-2xl shadow-sm border border-slate-100 overflow-hidden relative">
-                        {alert.profilePhoto ? <img src={alert.profilePhoto} className="w-full h-full object-cover opacity-60" /> : null}
-                        <div className="absolute inset-0 flex items-center justify-center text-2xl">{isResolved ? "😊" : alert.emoji}</div>
+                    {/* Avatar / Photo */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center font-bold text-slate-700 text-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        {alert.profilePhoto
+                          ? <img src={alert.profilePhoto} className="w-full h-full object-cover" alt={alert.student} />
+                          : <span className="text-2xl">{isResolved ? "😊" : alert.emoji}</span>
+                        }
                       </div>
+                      {alert.profilePhoto && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-slate-100 flex items-center justify-center text-sm shadow-sm">
+                          {isResolved ? "😊" : alert.emoji}
+                        </div>
+                      )}
                       {isResolved && (
                         <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-white" />
