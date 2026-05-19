@@ -212,6 +212,7 @@ export default function Home() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -272,7 +273,7 @@ export default function Home() {
       });
       if (res.ok) {
         localStorage.setItem("studentRoll", rollNumber);
-        router.push("/wellness");
+        setIsLoginLoading(true);
       } else {
         alert("❌ Invalid Magic Code! Ask your teacher for today's code.");
       }
@@ -345,7 +346,7 @@ export default function Home() {
           whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setShowTeacherModal(true)}
-          className="flex items-center gap-2 bg-white/80 backdrop-blur-md border border-white/60 text-slate-700 px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-slate-200/50 hover:bg-white hover:shadow-xl transition-all"
+          className="hidden items-center gap-2 bg-white/80 backdrop-blur-md border border-white/60 text-slate-700 px-5 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-slate-200/50 hover:bg-white hover:shadow-xl transition-all"
         >
           <GraduationCap className="w-4 h-4 text-purple-600" />
           Teacher Login
@@ -723,6 +724,74 @@ export default function Home() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ─── Premium Loading Overlay ─── */}
+      <AnimatePresence>
+        {isLoginLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/40 backdrop-blur-3xl"
+          >
+            {/* Ambient Animated Glow */}
+            <motion.div 
+              className="absolute w-[40vw] h-[40vw] bg-purple-500/20 rounded-full blur-[100px]"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.8, 0.5]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div 
+              className="absolute w-[30vw] h-[30vw] bg-pink-500/20 rounded-full blur-[80px]"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.5, 0.8, 0.5]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
+
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 100, damping: 20 }}
+              className="relative z-10 flex flex-col items-center"
+            >
+              <div className="w-96 h-96 sm:w-[500px] sm:h-[500px] md:w-[600px] md:h-[600px] relative flex items-center justify-center drop-shadow-2xl">
+                <video
+                  autoPlay
+                  playsInline
+                  onEnded={() => router.push("/wellness")}
+                  onError={() => {
+                    setTimeout(() => router.push("/wellness"), 1500);
+                  }}
+                  onLoadedData={(e) => {
+                    // Fallback timeout in case onEnded doesn't fire
+                    setTimeout(() => {
+                      if (isLoginLoading) {
+                        router.push("/wellness");
+                      }
+                    }, (e.currentTarget.duration * 1000) + 1000 || 5000);
+                  }}
+                  className="w-full h-full object-contain"
+                  style={{ backgroundColor: "transparent" }}
+                >
+                  <source src="/6683fc78a5514e8bb5c9a296bc6a9128.webm" type="video/webm" />
+                </video>
+              </div>
+              <motion.h2 
+                className="mt-8 text-2xl sm:text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-sm"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                Getting things ready...
+              </motion.h2>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </main>
   );
 }
