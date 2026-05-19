@@ -327,10 +327,11 @@ export default function Home() {
 
       {/* ─── Top Navigation Bar ─── */}
       <div className="relative z-20 flex items-center justify-between px-8 pt-6">
-        {/* Logo */}
+        {/* Logo (Secret Teacher Login Trigger) */}
         <motion.div
           initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3"
+          className="flex items-center gap-3 cursor-default select-none"
+          onDoubleClick={() => setShowTeacherModal(true)}
         >
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
             <Sparkles className="w-5 h-5 text-white" />
