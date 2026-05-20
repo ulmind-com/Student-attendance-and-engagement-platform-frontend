@@ -762,7 +762,7 @@ export default function StudentsPage() {
                   <select required value={formData.section} onChange={(e) => setFormData({...formData, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 appearance-none cursor-pointer transition-all">
                     <option value="" disabled>Select Section</option>
                     {(formData.class_name
-                      ? [...new Set(masterClassObjects.filter((c: any) => c.name === formData.class_name).map((c: any) => c.section).filter(Boolean))]
+                      ? Array.from(new Set(masterClassObjects.filter((c: any) => c.name === formData.class_name).map((c: any) => c.section).filter(Boolean)))
                       : masterSections
                     ).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -832,7 +832,7 @@ export default function StudentsPage() {
                   <select value={studentToEdit.section || ""} onChange={(e) => setStudentToEdit({...studentToEdit, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 appearance-none cursor-pointer transition-all">
                     <option value="" disabled>Select Section</option>
                     {((studentToEdit.class_name || studentToEdit.class)
-                      ? [...new Set(masterClassObjects.filter((c: any) => c.name === (studentToEdit.class_name || studentToEdit.class)).map((c: any) => c.section).filter(Boolean))]
+                      ? Array.from(new Set(masterClassObjects.filter((c: any) => c.name === (studentToEdit.class_name || studentToEdit.class)).map((c: any) => c.section).filter(Boolean)))
                       : masterSections
                     ).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>

@@ -198,8 +198,8 @@ export default function ClassesUsersPanel() {
   const [activeRole, setActiveRole] = useState<string>("Teacher");
 
   // Stats
-  const uniqueClassNames = [...new Set(classes.map(c => c.name))];
-  const uniqueSections = [...new Set(classes.map(c => c.section).filter(Boolean))];
+  const uniqueClassNames = Array.from(new Set(classes.map(c => c.name)));
+  const uniqueSections = Array.from(new Set(classes.map(c => c.section).filter(Boolean)));
 
   return (
     <div className="space-y-8 max-w-2xl">
