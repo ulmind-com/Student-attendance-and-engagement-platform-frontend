@@ -22,6 +22,8 @@ export default function AdminLayout({
   const [animationData, setAnimationData] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState("");
   const [currentDate, setCurrentDate] = useState("");
+  const [schoolName, setSchoolName] = useState("Student Attendance\n& Engagement");
+  const [schoolLogo, setSchoolLogo] = useState("");
 
   useEffect(() => {
     fetch('/lottie/Sandy Loading.json')
@@ -41,6 +43,23 @@ export default function AdminLayout({
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  // ── Fetch School Branding ──
+  useEffect(() => {
+    const fetchSchool = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/school`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.name) setSchoolName(data.name);
+          if (data.logo) setSchoolLogo(data.logo);
+        }
+      } catch {}
+    };
+    fetchSchool();
+    const poll = setInterval(fetchSchool, 10000);
+    return () => clearInterval(poll);
+  }, []);
 
   // ── Live Clock (US Allentown / Eastern Time) ──
   useEffect(() => {
@@ -109,8 +128,20 @@ export default function AdminLayout({
         isMobile ? "px-5 justify-between" : collapsed ? "px-4 justify-center" : "px-6 justify-between"
       )}>
         {(isMobile || !collapsed) && (
-          <div className="text-[15px] font-black leading-tight bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
-            Student Attendance<br/>& Engagement
+          <div className="flex items-center gap-2.5 min-w-0">
+            {schoolLogo && (
+              <div className="w-9 h-9 rounded-xl overflow-hidden bg-purple-50 flex-shrink-0 border border-purple-100">
+                <img src={schoolLogo} alt="" className="w-full h-full object-contain p-0.5" />
+              </div>
+            )}
+            <div className="text-[14px] font-black leading-tight bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text truncate">
+              {schoolName}
+            </div>
+          </div>
+        )}
+        {!isMobile && collapsed && schoolLogo && (
+          <div className="w-9 h-9 rounded-xl overflow-hidden bg-purple-50 border border-purple-100">
+            <img src={schoolLogo} alt="" className="w-full h-full object-contain p-0.5" />
           </div>
         )}
         {isMobile ? (
@@ -257,8 +288,8 @@ export default function AdminLayout({
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="text-[14px] font-black bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
-            {navigation.find(n => n.href === pathname)?.name || "Admin Panel"}
+          <div className="text-[14px] font-black bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text truncate max-w-[140px]">
+            {schoolName || navigation.find(n => n.href === pathname)?.name || "Admin Panel"}
           </div>
           {/* Clock on mobile top bar */}
           <div className="flex items-center gap-1.5 bg-purple-50 px-2.5 py-1.5 rounded-xl">
