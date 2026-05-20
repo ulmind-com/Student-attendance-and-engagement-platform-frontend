@@ -299,7 +299,7 @@ export default function AdminLayout({
         </div>
 
         {/* Page Content */}
-        <div className="p-4 md:p-8 flex-1">
+        <div className="p-4 pb-28 md:p-8 md:pb-8 flex-1">
           {children}
         </div>
       </main>
