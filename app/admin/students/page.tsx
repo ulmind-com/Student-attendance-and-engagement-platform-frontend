@@ -67,6 +67,7 @@ export default function StudentsPage() {
   });
   const [masterClasses, setMasterClasses] = useState<string[]>(["Nursery", "KG"]);
   const [masterSections, setMasterSections] = useState<string[]>(["A", "B"]);
+  const [masterClassObjects, setMasterClassObjects] = useState<any[]>([]);
 
   const { showSaveSuccess } = useSaveSuccess();
 
@@ -98,14 +99,23 @@ export default function StudentsPage() {
         const classesData = Array.isArray(data) ? data : (data.classes ? data.classes : null);
         
         if (classesData && Array.isArray(classesData)) {
+          // Store full objects for dynamic section filtering
+          const normalized = classesData.map((c: any) => {
+            if (c.section) return c;
+            // Old format: name like "Nursery-A" → split
+            if (c.name && c.name.includes("-")) {
+              const parts = c.name.split("-");
+              return { ...c, name: parts[0].trim(), section: parts.slice(1).join("-").trim() };
+            }
+            return { ...c, section: "" };
+          });
+          setMasterClassObjects(normalized);
+
           const cList = new Set<string>();
           const sList = new Set<string>();
-          classesData.forEach((c: any) => {
-            if (c.name) {
-              const parts = c.name.split("-");
-              if (parts.length > 0 && parts[0].trim()) cList.add(parts[0].trim());
-              if (parts.length > 1 && parts[1].trim()) sList.add(parts[1].trim());
-            }
+          normalized.forEach((c: any) => {
+            if (c.name) cList.add(c.name);
+            if (c.section) sList.add(c.section);
           });
           if (cList.size > 0) setMasterClasses(Array.from(cList));
           if (sList.size > 0) setMasterSections(Array.from(sList));
@@ -742,16 +752,19 @@ export default function StudentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Class</label>
-                  <select required value={formData.class_name} onChange={(e) => setFormData({...formData, class_name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                  <select required value={formData.class_name} onChange={(e) => { setFormData({...formData, class_name: e.target.value, section: ""}); }} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 appearance-none cursor-pointer transition-all">
                     <option value="" disabled>Select Class</option>
                     {masterClasses.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Section</label>
-                  <select required value={formData.section} onChange={(e) => setFormData({...formData, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                  <select required value={formData.section} onChange={(e) => setFormData({...formData, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 appearance-none cursor-pointer transition-all">
                     <option value="" disabled>Select Section</option>
-                    {masterSections.map(s => <option key={s} value={s}>{s}</option>)}
+                    {(formData.class_name
+                      ? [...new Set(masterClassObjects.filter((c: any) => c.name === formData.class_name).map((c: any) => c.section).filter(Boolean))]
+                      : masterSections
+                    ).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
@@ -809,16 +822,19 @@ export default function StudentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Class</label>
-                  <select required value={studentToEdit.class_name || studentToEdit.class || ""} onChange={(e) => setStudentToEdit({...studentToEdit, class_name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                  <select required value={studentToEdit.class_name || studentToEdit.class || ""} onChange={(e) => setStudentToEdit({...studentToEdit, class_name: e.target.value, section: ""})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 appearance-none cursor-pointer transition-all">
                     <option value="" disabled>Select Class</option>
                     {masterClasses.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Section</label>
-                  <select value={studentToEdit.section || ""} onChange={(e) => setStudentToEdit({...studentToEdit, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                  <select value={studentToEdit.section || ""} onChange={(e) => setStudentToEdit({...studentToEdit, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 appearance-none cursor-pointer transition-all">
                     <option value="" disabled>Select Section</option>
-                    {masterSections.map(s => <option key={s} value={s}>{s}</option>)}
+                    {((studentToEdit.class_name || studentToEdit.class)
+                      ? [...new Set(masterClassObjects.filter((c: any) => c.name === (studentToEdit.class_name || studentToEdit.class)).map((c: any) => c.section).filter(Boolean))]
+                      : masterSections
+                    ).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>

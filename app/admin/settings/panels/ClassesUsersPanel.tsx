@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { SectionHeader, SettingsCard, Label, Input, SaveButton } from "./shared";
-import { Plus, Trash2, Edit3, Users, GraduationCap, BookOpen, Loader2, Check, X } from "lucide-react";
+import { Plus, Trash2, Edit3, Users, GraduationCap, BookOpen, Loader2, Check, X, ChevronDown, Search } from "lucide-react";
 
-type ClassItem = { id: number; name: string; teacher: string; students: number; limit: number };
+type ClassItem = { id: number; name: string; section: string; teacher: string; students: number; limit: number };
 type TeacherItem = { id: number; name: string; subject: string; classes: string[] };
 
 const ROLES = ["Super Admin", "Teacher", "Parent Viewer"] as const;
@@ -14,6 +14,55 @@ const PERMISSIONS: Record<string, { label: string; allowed: string[] }> = {
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL;
+
+// ── Teacher Autocomplete Component ──
+function TeacherAutocomplete({ value, onChange, teachers, placeholder = "Select teacher" }: { value: string; onChange: (v: string) => void; teachers: TeacherItem[]; placeholder?: string }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setQuery(value); }, [value]);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = teachers.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input
+          value={query}
+          onChange={e => { setQuery(e.target.value); onChange(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder={placeholder}
+          className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all pr-8"
+        />
+        <ChevronDown className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </div>
+      {open && filtered.length > 0 && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl border border-slate-200 shadow-xl shadow-slate-200/50 max-h-40 overflow-y-auto">
+          {filtered.map(t => (
+            <button key={t.id} type="button"
+              onClick={() => { onChange(t.name); setQuery(t.name); setOpen(false); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-blue-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+            >
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                {t.name[0]}
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-slate-800">{t.name}</div>
+                <div className="text-[10px] text-slate-400">{t.subject}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ClassesUsersPanel() {
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -27,25 +76,28 @@ export default function ClassesUsersPanel() {
   classesRef.current = classes;
   teachersRef.current = teachers;
 
-  // ── Fetch on mount ──
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
       const res = await fetch(`${API}/settings/classes`);
       const data = await res.json();
       if (data && Array.isArray(data.classes)) {
-        setClasses(data.classes);
+        // Migrate old format: if class has no section, split from name
+        const migrated = data.classes.map((c: any) => {
+          if (!c.section && c.name && c.name.includes("-")) {
+            const parts = c.name.split("-");
+            return { ...c, name: parts[0].trim(), section: parts.slice(1).join("-").trim() };
+          }
+          return { ...c, section: c.section || "" };
+        });
+        setClasses(migrated);
         setTeachers(data.teachers || []);
-      } else if (Array.isArray(data)) {
-        setClasses(data);
       } else {
         setClasses([
-          { id: 1, name: "Nursery-A", teacher: "Emma Watson", students: 18, limit: 30 },
-          { id: 2, name: "Nursery-B", teacher: "Priya Sharma", students: 22, limit: 30 },
-          { id: 3, name: "KG-A", teacher: "Anita Roy", students: 15, limit: 25 },
+          { id: 1, name: "Nursery", section: "A", teacher: "Emma Watson", students: 18, limit: 30 },
+          { id: 2, name: "Nursery", section: "B", teacher: "Priya Sharma", students: 22, limit: 30 },
+          { id: 3, name: "KG", section: "A", teacher: "Anita Roy", students: 15, limit: 25 },
         ]);
         setTeachers([
           { id: 1, name: "Emma Watson", subject: "Class Teacher", classes: ["Nursery-A"] },
@@ -59,7 +111,6 @@ export default function ClassesUsersPanel() {
     }
   };
 
-  // ── Save to server (called after every add/delete) ──
   const saveToServer = async (newClasses: ClassItem[], newTeachers: TeacherItem[]) => {
     setIsSaving(true);
     setSaveMsg("");
@@ -82,15 +133,15 @@ export default function ClassesUsersPanel() {
   };
 
   // ── Class actions ──
-  const [newClass, setNewClass] = useState({ name: "", teacher: "", limit: "30" });
+  const [newClass, setNewClass] = useState({ name: "", section: "", teacher: "", limit: "30" });
   const [editingClassId, setEditingClassId] = useState<number | null>(null);
-  const [editClassData, setEditClassData] = useState({ name: "", teacher: "", limit: "30" });
+  const [editClassData, setEditClassData] = useState({ name: "", section: "", teacher: "", limit: "30" });
 
   const addClass = async () => {
-    if (!newClass.name) return;
-    const updated = [...classesRef.current, { id: Date.now(), name: newClass.name, teacher: newClass.teacher, students: 0, limit: Number(newClass.limit) }];
+    if (!newClass.name || !newClass.section) return;
+    const updated = [...classesRef.current, { id: Date.now(), name: newClass.name, section: newClass.section, teacher: newClass.teacher, students: 0, limit: Number(newClass.limit) }];
     setClasses(updated);
-    setNewClass({ name: "", teacher: "", limit: "30" });
+    setNewClass({ name: "", section: "", teacher: "", limit: "30" });
     await saveToServer(updated, teachersRef.current);
   };
   const deleteClass = async (id: number) => {
@@ -100,11 +151,11 @@ export default function ClassesUsersPanel() {
   };
   const startEditClass = (cls: ClassItem) => {
     setEditingClassId(cls.id);
-    setEditClassData({ name: cls.name, teacher: cls.teacher, limit: String(cls.limit) });
+    setEditClassData({ name: cls.name, section: cls.section, teacher: cls.teacher, limit: String(cls.limit) });
   };
   const saveEditClass = async () => {
     if (!editingClassId) return;
-    const updated = classesRef.current.map(c => c.id === editingClassId ? { ...c, name: editClassData.name, teacher: editClassData.teacher, limit: Number(editClassData.limit) } : c);
+    const updated = classesRef.current.map(c => c.id === editingClassId ? { ...c, name: editClassData.name, section: editClassData.section, teacher: editClassData.teacher, limit: Number(editClassData.limit) } : c);
     setClasses(updated);
     setEditingClassId(null);
     await saveToServer(updated, teachersRef.current);
@@ -141,50 +192,83 @@ export default function ClassesUsersPanel() {
 
   const [activeRole, setActiveRole] = useState<string>("Teacher");
 
+  // Stats
+  const uniqueClassNames = [...new Set(classes.map(c => c.name))];
+  const uniqueSections = [...new Set(classes.map(c => c.section).filter(Boolean))];
+
   return (
     <div className="space-y-8 max-w-2xl">
       <SectionHeader title="Classes & Users" description="Manage class rooms, teachers, and user permissions." />
 
       {/* Status bar */}
       {(isSaving || saveMsg) && (
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold ${isSaving ? "bg-blue-50 text-blue-600" : saveMsg.startsWith("✓") ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
+        <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${isSaving ? "bg-blue-50 text-blue-600 border border-blue-100" : saveMsg.startsWith("✓") ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-red-50 text-red-600 border border-red-100"}`}>
           {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
           {isSaving ? "Saving to database..." : saveMsg}
         </div>
       )}
 
+      {/* Quick Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 text-center">
+          <div className="text-2xl font-black text-emerald-600">{classes.length}</div>
+          <div className="text-[11px] font-bold text-emerald-500/70 uppercase tracking-wider mt-0.5">Total Classes</div>
+        </div>
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 text-center">
+          <div className="text-2xl font-black text-blue-600">{teachers.length}</div>
+          <div className="text-[11px] font-bold text-blue-500/70 uppercase tracking-wider mt-0.5">Teachers</div>
+        </div>
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-2xl p-4 text-center">
+          <div className="text-2xl font-black text-purple-600">{classes.reduce((a, c) => a + c.students, 0)}</div>
+          <div className="text-[11px] font-bold text-purple-500/70 uppercase tracking-wider mt-0.5">Total Students</div>
+        </div>
+      </div>
+
       {/* Class Management */}
       <SettingsCard>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-black text-slate-800 flex items-center gap-2"><BookOpen className="w-4 h-4 text-green-500" /> Class Management</h3>
+          <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">{classes.length} classes</span>
         </div>
-        <div className="space-y-2 mb-4">
+
+        {/* Class list */}
+        <div className="space-y-2 mb-5">
           {classes.map(cls => (
-            <div key={cls.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+            <div key={cls.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-green-200 hover:bg-green-50/30 transition-all">
               {editingClassId === cls.id ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <input value={editClassData.name} onChange={e => setEditClassData(d => ({...d, name: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Class name" />
-                  <input value={editClassData.teacher} onChange={e => setEditClassData(d => ({...d, teacher: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Teacher" />
-                  <input value={editClassData.limit} onChange={e => setEditClassData(d => ({...d, limit: e.target.value}))} type="number" className="w-16 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Limit" />
-                  <button onClick={saveEditClass} className="p-1.5 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"><Check className="w-3.5 h-3.5 text-green-600" /></button>
-                  <button onClick={() => setEditingClassId(null)} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><X className="w-3.5 h-3.5 text-slate-500" /></button>
+                <div className="flex-1 grid grid-cols-5 gap-2 items-center">
+                  <input value={editClassData.name} onChange={e => setEditClassData(d => ({...d, name: e.target.value}))} className="px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Class" />
+                  <input value={editClassData.section} onChange={e => setEditClassData(d => ({...d, section: e.target.value}))} className="px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Section" />
+                  <input value={editClassData.teacher} onChange={e => setEditClassData(d => ({...d, teacher: e.target.value}))} className="px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Teacher" />
+                  <input value={editClassData.limit} onChange={e => setEditClassData(d => ({...d, limit: e.target.value}))} type="number" className="px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Limit" />
+                  <div className="flex gap-1 justify-end">
+                    <button onClick={saveEditClass} className="p-1.5 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"><Check className="w-3.5 h-3.5 text-green-600" /></button>
+                    <button onClick={() => setEditingClassId(null)} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><X className="w-3.5 h-3.5 text-slate-500" /></button>
+                  </div>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
-                      <GraduationCap className="w-4 h-4 text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center shadow-sm">
+                      <GraduationCap className="w-4.5 h-4.5 text-white" />
                     </div>
                     <div>
-                      <div className="font-bold text-slate-800 text-sm">{cls.name}</div>
-                      <div className="text-xs text-slate-500">Teacher: {cls.teacher} • {cls.students}/{cls.limit} students</div>
+                      <div className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                        {cls.name}
+                        {cls.section && <span className="text-[10px] font-black bg-green-100 text-green-700 px-1.5 py-0.5 rounded-md">{cls.section}</span>}
+                      </div>
+                      <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                        <span>👩‍🏫 {cls.teacher || "Unassigned"}</span>
+                        <span className="text-slate-300">•</span>
+                        <span>👨‍🎓 {cls.students}/{cls.limit}</span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 hover:bg-blue-50 rounded-lg" onClick={() => startEditClass(cls)}>
+                    <button className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors" onClick={() => startEditClass(cls)}>
                       <Edit3 className="w-3.5 h-3.5 text-blue-400" />
                     </button>
-                    <button className="p-1.5 hover:bg-red-50 rounded-lg" onClick={() => deleteClass(cls.id)}>
+                    <button className="p-1.5 hover:bg-red-50 rounded-lg transition-colors" onClick={() => deleteClass(cls.id)}>
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
                     </button>
                   </div>
@@ -193,15 +277,19 @@ export default function ClassesUsersPanel() {
             </div>
           ))}
         </div>
+
         {/* Add Class Form */}
-        <div className="bg-green-50 rounded-xl p-4 border border-green-100 space-y-3">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100 space-y-3">
           <div className="text-xs font-bold text-green-700 uppercase tracking-wider flex items-center gap-1"><Plus className="w-3 h-3" /> Add New Class</div>
-          <div className="grid grid-cols-3 gap-2">
-            <Input value={newClass.name} onChange={v => setNewClass(s => ({ ...s, name: v }))} placeholder="Class name" />
-            <Input value={newClass.teacher} onChange={v => setNewClass(s => ({ ...s, teacher: v }))} placeholder="Teacher" />
-            <Input value={newClass.limit} onChange={v => setNewClass(s => ({ ...s, limit: v }))} placeholder="Limit" type="number" />
+          <div className="grid grid-cols-2 gap-2">
+            <Input value={newClass.name} onChange={v => setNewClass(s => ({ ...s, name: v }))} placeholder="Class name (e.g. Nursery)" />
+            <Input value={newClass.section} onChange={v => setNewClass(s => ({ ...s, section: v }))} placeholder="Section (e.g. A)" />
           </div>
-          <button onClick={addClass} disabled={isSaving} className="w-full py-2 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 active:scale-95 transition-all disabled:opacity-50">
+          <div className="grid grid-cols-2 gap-2">
+            <TeacherAutocomplete value={newClass.teacher} onChange={v => setNewClass(s => ({ ...s, teacher: v }))} teachers={teachers} placeholder="Assign teacher" />
+            <Input value={newClass.limit} onChange={v => setNewClass(s => ({ ...s, limit: v }))} placeholder="Student limit" type="number" />
+          </div>
+          <button onClick={addClass} disabled={isSaving || !newClass.name || !newClass.section} className="w-full py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl text-sm font-bold hover:from-green-700 hover:to-emerald-700 active:scale-[0.98] transition-all disabled:opacity-40 shadow-sm shadow-green-200">
             {isSaving ? "Saving..." : "Add Class"}
           </button>
         </div>
@@ -211,21 +299,23 @@ export default function ClassesUsersPanel() {
       <SettingsCard>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-black text-slate-800 flex items-center gap-2"><Users className="w-4 h-4 text-blue-500" /> Teacher Management</h3>
+          <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">{teachers.length} teachers</span>
         </div>
-        <div className="space-y-2 mb-4">
+
+        <div className="space-y-2 mb-5">
           {teachers.map(t => (
-            <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+            <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-blue-200 hover:bg-blue-50/30 transition-all">
               {editingTeacherId === t.id ? (
                 <div className="flex-1 flex items-center gap-2">
-                  <input value={editTeacherData.name} onChange={e => setEditTeacherData(d => ({...d, name: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="Teacher name" />
-                  <input value={editTeacherData.subject} onChange={e => setEditTeacherData(d => ({...d, subject: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="Subject / Role" />
+                  <input value={editTeacherData.name} onChange={e => setEditTeacherData(d => ({...d, name: e.target.value}))} className="flex-1 px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="Teacher name" />
+                  <input value={editTeacherData.subject} onChange={e => setEditTeacherData(d => ({...d, subject: e.target.value}))} className="flex-1 px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="Subject / Role" />
                   <button onClick={saveEditTeacher} className="p-1.5 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"><Check className="w-3.5 h-3.5 text-green-600" /></button>
                   <button onClick={() => setEditingTeacherId(null)} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><X className="w-3.5 h-3.5 text-slate-500" /></button>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                       {t.name[0]}
                     </div>
                     <div>
@@ -234,10 +324,10 @@ export default function ClassesUsersPanel() {
                     </div>
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 hover:bg-blue-50 rounded-lg" onClick={() => startEditTeacher(t)}>
+                    <button className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors" onClick={() => startEditTeacher(t)}>
                       <Edit3 className="w-3.5 h-3.5 text-blue-400" />
                     </button>
-                    <button className="p-1.5 hover:bg-red-50 rounded-lg" onClick={() => deleteTeacher(t.id)}>
+                    <button className="p-1.5 hover:bg-red-50 rounded-lg transition-colors" onClick={() => deleteTeacher(t.id)}>
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />
                     </button>
                   </div>
@@ -246,13 +336,13 @@ export default function ClassesUsersPanel() {
             </div>
           ))}
         </div>
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-3">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100 space-y-3">
           <div className="text-xs font-bold text-blue-700 uppercase tracking-wider flex items-center gap-1"><Plus className="w-3 h-3" /> Add Teacher</div>
           <div className="grid grid-cols-2 gap-2">
             <Input value={newTeacher.name} onChange={v => setNewTeacher(s => ({ ...s, name: v }))} placeholder="Teacher name" />
             <Input value={newTeacher.subject} onChange={v => setNewTeacher(s => ({ ...s, subject: v }))} placeholder="Subject / Role" />
           </div>
-          <button onClick={addTeacher} disabled={isSaving} className="w-full py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50">
+          <button onClick={addTeacher} disabled={isSaving || !newTeacher.name} className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-40 shadow-sm shadow-blue-200">
             {isSaving ? "Saving..." : "Add Teacher"}
           </button>
         </div>
