@@ -128,13 +128,6 @@ export default function AdminDashboard() {
     { text: `Average mood score today is ${avgMood}/10. Keep encouraging your class!`, Icon: SmilePlus, color: "from-purple-500 to-pink-500" },
   ];
 
-  function getGreeting() {
-    const h = new Date().getHours();
-    if (h < 12) return "Good Morning";
-    if (h < 17) return "Good Afternoon";
-    return "Good Evening";
-  }
-
   const statCards = [
     { title: "Total Students", value: String(totalStudents), sub: "Enrolled", icon: Users, gradient: "from-blue-500 to-cyan-600", glow: "shadow-blue-200", modalKey: "total" as const },
     { title: "Classes", value: String(classCount), sub: `${teacherCount} teachers`, icon: GraduationCap, gradient: "from-emerald-500 to-teal-600", glow: "shadow-emerald-200", modalKey: "classes" as const },
