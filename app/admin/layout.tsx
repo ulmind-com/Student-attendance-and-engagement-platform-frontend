@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { LayoutDashboard, Users, CalendarCheck, Bell, Settings, LogOut, Menu, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { LayoutDashboard, Users, CalendarCheck, Bell, Settings, LogOut, Menu, X, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -20,6 +20,8 @@ export default function AdminLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(true);
   const [animationData, setAnimationData] = useState<any>(null);
+  const [currentTime, setCurrentTime] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
     fetch('/lottie/Sandy Loading.json')
@@ -39,6 +41,46 @@ export default function AdminLayout({
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  // ── Live Clock (US Allentown / Eastern Time) ──
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+      const dateStr = now.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric", year: "numeric" });
+      setCurrentTime(timeStr);
+      setCurrentDate(dateStr);
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ── Session Security: Block back/forward, right-click, dev tools ──
+  useEffect(() => {
+    // Block back/forward
+    history.pushState(null, "", location.href);
+    const blockNav = () => { history.pushState(null, "", location.href); };
+    window.addEventListener("popstate", blockNav);
+
+    // Block right-click
+    const blockContextMenu = (e: MouseEvent) => { e.preventDefault(); };
+    document.addEventListener("contextmenu", blockContextMenu);
+
+    // Block dev tools shortcuts
+    const blockKeys = (e: KeyboardEvent) => {
+      if (e.key === "F12") { e.preventDefault(); return; }
+      if (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key.toUpperCase())) { e.preventDefault(); return; }
+      if (e.ctrlKey && e.key.toUpperCase() === "U") { e.preventDefault(); return; }
+    };
+    document.addEventListener("keydown", blockKeys);
+
+    return () => {
+      window.removeEventListener("popstate", blockNav);
+      document.removeEventListener("contextmenu", blockContextMenu);
+      document.removeEventListener("keydown", blockKeys);
+    };
+  }, []);
 
   const handleNavigation = (e: React.MouseEvent, href: string) => {
     e.preventDefault();
@@ -122,8 +164,24 @@ export default function AdminLayout({
         })}
       </nav>
 
-      {/* Sign Out */}
-      <div className="p-3 border-t border-slate-100 flex-shrink-0">
+      {/* Sign Out + Clock */}
+      <div className="p-3 border-t border-slate-100 flex-shrink-0 space-y-2">
+        {/* Live Clock */}
+        {(isMobile || !collapsed) ? (
+          <div className="px-3 py-2.5 bg-gradient-to-br from-slate-50 to-purple-50 rounded-xl border border-slate-100">
+            <div className="flex items-center gap-2 mb-0.5">
+              <Clock className="w-3.5 h-3.5 text-purple-500" />
+              <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">Allentown, PA</span>
+            </div>
+            <div className="text-lg font-black text-slate-800 tabular-nums leading-tight">{currentTime}</div>
+            <div className="text-[10px] font-medium text-slate-400 mt-0.5">{currentDate}</div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center py-2" title={`${currentTime} • ${currentDate}`}>
+            <Clock className="w-4 h-4 text-purple-500 mb-1" />
+            <span className="text-[9px] font-bold text-slate-500 tabular-nums leading-tight">{currentTime.replace(/ [AP]M/, "")}</span>
+          </div>
+        )}
         <Link
           href="/"
           title={(!isMobile && collapsed) ? "Sign Out" : undefined}
@@ -202,12 +260,10 @@ export default function AdminLayout({
           <div className="text-[14px] font-black bg-gradient-to-r from-purple-600 to-pink-500 text-transparent bg-clip-text">
             {navigation.find(n => n.href === pathname)?.name || "Admin Panel"}
           </div>
-          {/* Active page icon */}
-          <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center">
-            {(() => {
-              const NavIcon = navigation.find(n => n.href === pathname)?.icon || LayoutDashboard;
-              return <NavIcon className="w-4 h-4 text-purple-600" />;
-            })()}
+          {/* Clock on mobile top bar */}
+          <div className="flex items-center gap-1.5 bg-purple-50 px-2.5 py-1.5 rounded-xl">
+            <Clock className="w-3 h-3 text-purple-500" />
+            <span className="text-[10px] font-bold text-purple-600 tabular-nums">{currentTime}</span>
           </div>
         </div>
 
