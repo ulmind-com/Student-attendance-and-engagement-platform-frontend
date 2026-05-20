@@ -10,7 +10,7 @@ import {
   Users, SmilePlus, AlertTriangle,
   HeartPulse, ShieldCheck, ShieldAlert, Calendar, ArrowRight,
   CheckCircle2, Bell, Sparkles, Activity, X, Star,
-  Sun, Cloud, Moon, Bot, BarChart2
+  Sun, Cloud, Moon, Bot, BarChart2, GraduationCap, BookOpen
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -51,22 +51,37 @@ function getGreetingIcon() {
 
 export default function AdminDashboard() {
   const [students, setStudents] = useState<any[]>([]);
+  const [classCount, setClassCount] = useState(0);
+  const [teacherCount, setTeacherCount] = useState(0);
   const [time, setTime] = useState<Date | null>(null);
   const [activeInsight, setActiveInsight] = useState(0);
   const [activeModal, setActiveModal] = useState<"total" | "present" | "mood" | "wellness" | null>(null);
 
+  const fetchAll = async () => {
+    try {
+      const [sRes, cRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/students`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/classes`),
+      ]);
+      if (sRes.ok) setStudents(await sRes.json());
+      if (cRes.ok) {
+        const data = await cRes.json();
+        const cls = Array.isArray(data) ? data : (data.classes || []);
+        const tchs = data.teachers || [];
+        setClassCount(cls.length);
+        setTeacherCount(tchs.length);
+      }
+    } catch {}
+  };
+
   useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/students`);
-        if (res.ok) setStudents(await res.json());
-      } catch {}
-    };
-    fetchStudents();
+    fetchAll();
+    // Live polling every 5 seconds
+    const poll = setInterval(fetchAll, 5000);
     // Start clock only on client after mount to avoid hydration mismatch
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    return () => { clearInterval(poll); clearInterval(timer); };
   }, []);
 
   useEffect(() => {
@@ -118,6 +133,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { title: "Total Students", value: String(totalStudents), sub: "Enrolled", icon: Users, gradient: "from-blue-500 to-cyan-600", glow: "shadow-blue-200", modalKey: "total" as const },
+    { title: "Classes", value: String(classCount), sub: `${teacherCount} teachers`, icon: GraduationCap, gradient: "from-emerald-500 to-teal-600", glow: "shadow-emerald-200", modalKey: null },
     { title: "Present Today", value: String(checkedInToday), sub: `${absentToday} absent`, icon: CheckCircle2, gradient: "from-green-500 to-teal-500", glow: "shadow-green-200", modalKey: "present" as const },
     { title: "Avg Mood Score", value: `${avgMood}`, sub: "Out of 10", icon: SmilePlus, gradient: "from-purple-500 to-violet-600", glow: "shadow-purple-200", modalKey: "mood" as const },
     { title: "Wellness Alerts", value: String(riskCount), sub: riskCount > 0 ? "Need attention" : "All clear!", icon: riskCount > 0 ? AlertTriangle : ShieldCheck, gradient: riskCount > 0 ? "from-red-500 to-rose-600" : "from-green-400 to-teal-500", glow: riskCount > 0 ? "shadow-red-200" : "shadow-green-200", modalKey: "wellness" as const },
@@ -337,7 +353,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── STAT CARDS ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
         {statCards.map((card, i) => (
           <motion.div
             key={card.title}
