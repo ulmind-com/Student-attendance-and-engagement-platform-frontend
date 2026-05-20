@@ -216,6 +216,8 @@ export default function Home() {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [schoolName, setSchoolName] = useState("Student Attendance\n& Engagement Platform");
+  const [schoolLogo, setSchoolLogo] = useState("");
   
   const [animKey, setAnimKey] = useState(0);
   useEffect(() => {
@@ -223,6 +225,20 @@ export default function Home() {
       setAnimKey(prev => prev + 1);
     }, 4500);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch school branding
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/school`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.name) setSchoolName(data.name);
+          if (data.logo) setSchoolLogo(data.logo);
+        }
+      } catch {}
+    })();
   }, []);
 
   // Debounced name search
@@ -333,11 +349,17 @@ export default function Home() {
           className="flex items-center gap-3 cursor-default select-none"
           onDoubleClick={() => setShowTeacherModal(true)}
         >
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
+          {schoolLogo ? (
+            <div className="w-10 h-10 rounded-2xl overflow-hidden bg-white shadow-lg border border-purple-100">
+              <img src={schoolLogo} alt="" className="w-full h-full object-contain p-0.5" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+          )}
           <div>
-            <div className="font-black text-slate-800 text-[15px] leading-[1.1] tracking-tight">Student Attendance<br/>& Engagement Platform</div>
+            <div className="font-black text-slate-800 text-[15px] leading-[1.1] tracking-tight">{schoolName}</div>
           </div>
         </motion.div>
 
