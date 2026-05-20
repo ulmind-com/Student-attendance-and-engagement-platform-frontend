@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, Palette, Users, KeyRound, MessageSquare, BellRing, Shield, Sparkles, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,11 +15,11 @@ import AIInsightsPanel from "./panels/AIInsightsPanel";
 import AdvancedPanel from "./panels/AdvancedPanel";
 import AdminUsersPanel from "./panels/AdminUsersPanel";
 
-const tabs = [
+const allTabs = [
   { id: "school",        icon: Building2,         label: "School Info",         color: "from-blue-500 to-cyan-500" },
   { id: "branding",      icon: Palette,           label: "Branding & Theme",    color: "from-purple-500 to-pink-500" },
   { id: "users",         icon: Users,             label: "Classes & Users",     color: "from-green-500 to-teal-500" },
-  { id: "admins",        icon: Shield,            label: "Admin Accounts",      color: "from-violet-600 to-purple-700" },
+  { id: "admins",        icon: Shield,            label: "Admin Accounts",      color: "from-violet-600 to-purple-700", superAdminOnly: true },
   { id: "otp",           icon: KeyRound,          label: "OTP Settings",        color: "from-orange-500 to-yellow-500" },
   { id: "wellness",      icon: MessageSquare,     label: "Emotional Questions", color: "from-rose-500 to-pink-500" },
   { id: "notifications", icon: BellRing,          label: "Notifications",       color: "from-violet-500 to-purple-500" },
@@ -44,8 +44,17 @@ const panelMap: Record<string, React.ComponentType> = {
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("school");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState("Super Admin");
+
+  useEffect(() => {
+    const role = localStorage.getItem("adminRole");
+    if (role) setUserRole(role);
+  }, []);
+
+  // Filter tabs based on role
+  const tabs = allTabs.filter(t => !t.superAdminOnly || userRole === "Super Admin");
   const ActivePanel = panelMap[activeTab];
-  const activeTabData = tabs.find(t => t.id === activeTab)!;
+  const activeTabData = tabs.find(t => t.id === activeTab) || tabs[0];
 
   const handleTabChange = (id: string) => {
     setActiveTab(id);

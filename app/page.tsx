@@ -308,6 +308,9 @@ export default function Home() {
         body: JSON.stringify({ username: teacherUsername, password: teacherPassword }),
       });
       if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("adminRole", data.role || "Teacher");
+        localStorage.setItem("adminUsername", data.username || teacherUsername);
         router.push("/admin");
       } else {
         setLoginError("Invalid credentials. Please try again.");
