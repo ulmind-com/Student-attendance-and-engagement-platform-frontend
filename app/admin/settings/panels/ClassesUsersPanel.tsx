@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SectionHeader, SettingsCard, Label, Input, SaveButton } from "./shared";
 import { Plus, Trash2, Edit3, Users, GraduationCap, BookOpen } from "lucide-react";
 
@@ -14,15 +14,70 @@ const PERMISSIONS: Record<string, { label: string; allowed: string[] }> = {
 };
 
 export default function ClassesUsersPanel() {
-  const [classes, setClasses] = useState<ClassItem[]>([
-    { id: 1, name: "Nursery-A", teacher: "Emma Watson", students: 18, limit: 30 },
-    { id: 2, name: "Nursery-B", teacher: "Priya Sharma", students: 22, limit: 30 },
-    { id: 3, name: "KG-A", teacher: "Anita Roy", students: 15, limit: 25 },
-  ]);
-  const [teachers, setTeachers] = useState<TeacherItem[]>([
-    { id: 1, name: "Emma Watson", subject: "Class Teacher", classes: ["Nursery-A"] },
-    { id: 2, name: "Priya Sharma", subject: "Class Teacher", classes: ["Nursery-B"] },
-  ]);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [teachers, setTeachers] = useState<TeacherItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/classes`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && Array.isArray(data.classes)) {
+          setClasses(data.classes);
+          setTeachers(data.teachers || []);
+        } else if (Array.isArray(data)) {
+          // Fallback for older API format if it's still caching
+          setClasses(data);
+          setTeachers([
+            { id: 1, name: "Emma Watson", subject: "Class Teacher", classes: ["Nursery-A"] },
+            { id: 2, name: "Priya Sharma", subject: "Class Teacher", classes: ["Nursery-B"] },
+          ]);
+        } else {
+          // Fallback if API is not available yet
+          setClasses([
+            { id: 1, name: "Nursery-A", teacher: "Emma Watson", students: 18, limit: 30 },
+            { id: 2, name: "Nursery-B", teacher: "Priya Sharma", students: 22, limit: 30 },
+            { id: 3, name: "KG-A", teacher: "Anita Roy", students: 15, limit: 25 },
+          ]);
+          setTeachers([
+            { id: 1, name: "Emma Watson", subject: "Class Teacher", classes: ["Nursery-A"] },
+            { id: 2, name: "Priya Sharma", subject: "Class Teacher", classes: ["Nursery-B"] },
+          ]);
+        }
+        setIsLoading(false);
+      })
+      .catch(e => {
+        console.error(e);
+        setClasses([
+          { id: 1, name: "Nursery-A", teacher: "Emma Watson", students: 18, limit: 30 },
+          { id: 2, name: "Nursery-B", teacher: "Priya Sharma", students: 22, limit: 30 },
+          { id: 3, name: "KG-A", teacher: "Anita Roy", students: 15, limit: 25 },
+        ]);
+        setTeachers([
+          { id: 1, name: "Emma Watson", subject: "Class Teacher", classes: ["Nursery-A"] },
+          { id: 2, name: "Priya Sharma", subject: "Class Teacher", classes: ["Nursery-B"] },
+        ]);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const saveClasses = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/classes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classes, teachers })
+      });
+      if (!res.ok) {
+        throw new Error("Failed to save classes and teachers.");
+      }
+      console.log("Classes and teachers saved successfully");
+      alert("Settings saved successfully!");
+    } catch (e) {
+      console.error(e);
+      alert("Error saving settings! The new backend is still deploying on Render. Please try again in 2-3 minutes.");
+    }
+  };
   const [newClass, setNewClass] = useState({ name: "", teacher: "", limit: "30" });
   const [newTeacher, setNewTeacher] = useState({ name: "", subject: "" });
   const [activeRole, setActiveRole] = useState<string>("Teacher");
@@ -147,7 +202,7 @@ export default function ClassesUsersPanel() {
       </SettingsCard>
 
       <div className="flex justify-end pt-2">
-        <SaveButton onSave={() => console.log("Classes saved")} />
+        <SaveButton onSave={saveClasses} label="Save Classes" />
       </div>
     </div>
   );

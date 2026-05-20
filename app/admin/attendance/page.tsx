@@ -2,31 +2,16 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, Calendar as CalendarIcon, ShieldAlert, MoreVertical, Key } from "lucide-react";
+import { Search, Filter, Calendar as CalendarIcon, ShieldAlert, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function AttendancePage() {
   const [students, setStudents] = useState<any[]>([]);
-  const [magicCode, setMagicCode] = useState<string>("1234");
-  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
-  const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
-  const [isExpired, setIsExpired] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   
-  const fetchMagicCode = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/magic-code`);
-      if (res.ok) {
-        const data = await res.json();
-        setMagicCode(data.code);
-        setExpiresAt(new Date(data.expires_at));
-      }
-    } catch (e) {}
-  };
-
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -40,40 +25,7 @@ export default function AttendancePage() {
       }
     };
     fetchStudents();
-    fetchMagicCode();
   }, []);
-
-  useEffect(() => {
-    if (!expiresAt) return;
-    const interval = setInterval(() => {
-      const now = new Date();
-      const diff = expiresAt.getTime() - now.getTime();
-      if (diff <= 0) {
-        setIsExpired(true);
-        setTimeLeft("00:00:00");
-        clearInterval(interval);
-      } else {
-        setIsExpired(false);
-        const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-        const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-        setTimeLeft(`${h}:${m}:${s}`);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [expiresAt]);
-
-  const generateNewCode = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/magic-code/generate`, { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setMagicCode(data.code);
-        setExpiresAt(new Date(data.expires_at));
-        setIsExpired(false);
-      }
-    } catch (e) {}
-  };
 
   // Heatmap calculation
   const heatmapDays = useMemo(() => {
@@ -315,37 +267,37 @@ export default function AttendancePage() {
         {/* Right Column: Live Monitor & OTP */}
         <div className="space-y-8">
           
-          {/* OTP Panel */}
-          <div className={cn(
-            "glass-card border-none text-white p-6 relative overflow-hidden transition-all duration-500",
-            isExpired ? "bg-gradient-to-br from-slate-600 to-slate-800" : "bg-gradient-to-br from-purple-600 to-pink-500"
-          )}>
-            <div className="absolute top-0 right-0 p-4 opacity-20"><Key className="w-24 h-24" /></div>
-            <h2 className="font-bold text-white/90 text-sm uppercase tracking-wider mb-2 relative z-10">Today's Magic Code</h2>
+          {/* Daily Quick Stats */}
+          <div className="glass-card border-none text-white p-6 relative overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-xl">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-3xl -translate-y-10 translate-x-10"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/10 rounded-full blur-2xl translate-y-10 -translate-x-10"></div>
             
-            <motion.div 
-              key={magicCode}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className={cn("text-5xl font-black tracking-widest mb-2 relative z-10", isExpired && "opacity-50 line-through")}
-            >
-              {magicCode}
-            </motion.div>
-
-            <div className="text-sm font-bold bg-black/20 w-fit px-3 py-1 rounded-md mb-4 relative z-10 flex items-center shadow-inner border border-white/10">
-               <span className={cn("tracking-widest font-mono", isExpired ? "text-red-300" : "text-white")}>⏱ {timeLeft}</span>
-            </div>
-
-            <div className="flex items-center justify-between relative z-10 mt-2">
-              <span className={cn("text-sm font-bold px-3 py-1 rounded-full", isExpired ? "bg-red-500/80 text-white" : "bg-white/20")}>
-                {isExpired ? "Expired" : "Active Code"}
-              </span>
-              <button 
-                onClick={generateNewCode} 
-                className="bg-white text-purple-600 px-4 py-2 rounded-xl font-bold text-sm hover:bg-purple-50 transition-all shadow-lg active:scale-95"
-              >
-                Generate New
-              </button>
+            <h2 className="font-bold text-white/90 text-sm uppercase tracking-wider mb-4 relative z-10">Today's Overview</h2>
+            
+            <div className="grid grid-cols-2 gap-4 relative z-10">
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                <div className="text-xs font-bold text-white/80 mb-1">Present</div>
+                <div className="text-2xl font-black">{studentsTable.filter(s => s.status === "Present").length}</div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/20">
+                <div className="text-xs font-bold text-white/80 mb-1">Absent</div>
+                <div className="text-2xl font-black">{studentsTable.filter(s => s.status === "Absent").length}</div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 border border-white/20 col-span-2 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-white/80 mb-1">Avg Mood</div>
+                  <div className="text-xl font-black">
+                    {studentsTable.filter(s => s.status === "Present").length > 0 
+                      ? (studentsTable.filter(s => s.status === "Present").reduce((acc, s) => acc + s.mood, 0) / studentsTable.filter(s => s.status === "Present").length).toFixed(1) 
+                      : "-"} / 10
+                  </div>
+                </div>
+                <div className="text-4xl opacity-90">
+                  {studentsTable.filter(s => s.status === "Present").length > 0 
+                    ? ((studentsTable.filter(s => s.status === "Present").reduce((acc, s) => acc + s.mood, 0) / studentsTable.filter(s => s.status === "Present").length) >= 8 ? "😊" : "😐")
+                    : "😴"}
+                </div>
+              </div>
             </div>
           </div>
 

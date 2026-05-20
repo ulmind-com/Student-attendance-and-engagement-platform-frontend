@@ -62,9 +62,11 @@ export default function StudentsPage() {
 
   // Form states
   const [formData, setFormData] = useState({ 
-    firstName: "", lastInitial: "", rollNumber: "", class_name: "Nursery", section: "A", 
+    firstName: "", lastInitial: "", rollNumber: "", class_name: "", section: "", 
     parentsName: "", parentsPhone: "", bloodGroup: "", profilePhoto: "" 
   });
+  const [masterClasses, setMasterClasses] = useState<string[]>(["Nursery", "KG"]);
+  const [masterSections, setMasterSections] = useState<string[]>(["A", "B"]);
 
   const { showSaveSuccess } = useSaveSuccess();
 
@@ -85,7 +87,32 @@ export default function StudentsPage() {
     fetchStudents();
     fetchTodayAttendance();
     fetchAttendanceDates();
+    fetchMasterClasses();
   }, []);
+
+  const fetchMasterClasses = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/classes`);
+      if (res.ok) {
+        const data = await res.json();
+        const classesData = Array.isArray(data) ? data : (data.classes ? data.classes : null);
+        
+        if (classesData && Array.isArray(classesData)) {
+          const cList = new Set<string>();
+          const sList = new Set<string>();
+          classesData.forEach((c: any) => {
+            if (c.name) {
+              const parts = c.name.split("-");
+              if (parts.length > 0 && parts[0].trim()) cList.add(parts[0].trim());
+              if (parts.length > 1 && parts[1].trim()) sList.add(parts[1].trim());
+            }
+          });
+          if (cList.size > 0) setMasterClasses(Array.from(cList));
+          if (sList.size > 0) setMasterSections(Array.from(sList));
+        }
+      }
+    } catch (e) {}
+  };
 
   const fetchTodayAttendance = async () => {
     try {
@@ -143,7 +170,7 @@ export default function StudentsPage() {
       });
       if (res.ok) {
         setIsAddModalOpen(false);
-        setFormData({ firstName: "", lastInitial: "", rollNumber: "", class_name: "Nursery", section: "A", parentsName: "", parentsPhone: "", bloodGroup: "", profilePhoto: "" });
+        setFormData({ firstName: "", lastInitial: "", rollNumber: "", class_name: masterClasses[0] || "Nursery", section: masterSections[0] || "A", parentsName: "", parentsPhone: "", bloodGroup: "", profilePhoto: "" });
         fetchStudents();
         showSaveSuccess("Student added! 🎉");
       }
@@ -715,11 +742,17 @@ export default function StudentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Class</label>
-                  <input required value={formData.class_name} onChange={(e) => setFormData({...formData, class_name: e.target.value})} placeholder="e.g. Nursery" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500" />
+                  <select required value={formData.class_name} onChange={(e) => setFormData({...formData, class_name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                    <option value="" disabled>Select Class</option>
+                    {masterClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Section</label>
-                  <input required value={formData.section} onChange={(e) => setFormData({...formData, section: e.target.value})} placeholder="e.g. A" className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500" />
+                  <select required value={formData.section} onChange={(e) => setFormData({...formData, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                    <option value="" disabled>Select Section</option>
+                    {masterSections.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
               </div>
               <div className="space-y-1">
@@ -776,11 +809,17 @@ export default function StudentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Class</label>
-                  <input required value={studentToEdit.class_name || studentToEdit.class || ""} onChange={(e) => setStudentToEdit({...studentToEdit, class_name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500" />
+                  <select required value={studentToEdit.class_name || studentToEdit.class || ""} onChange={(e) => setStudentToEdit({...studentToEdit, class_name: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                    <option value="" disabled>Select Class</option>
+                    {masterClasses.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-1">
                   <label className="text-sm font-bold text-slate-700">Section</label>
-                  <input value={studentToEdit.section || ""} onChange={(e) => setStudentToEdit({...studentToEdit, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500" />
+                  <select value={studentToEdit.section || ""} onChange={(e) => setStudentToEdit({...studentToEdit, section: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-purple-500 appearance-none cursor-pointer">
+                    <option value="" disabled>Select Section</option>
+                    {masterSections.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
