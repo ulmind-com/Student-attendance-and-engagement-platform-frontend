@@ -53,9 +53,11 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [classCount, setClassCount] = useState(0);
   const [teacherCount, setTeacherCount] = useState(0);
+  const [teachersList, setTeachersList] = useState<any[]>([]);
+  const [classesList, setClassesList] = useState<any[]>([]);
   const [time, setTime] = useState<Date | null>(null);
   const [activeInsight, setActiveInsight] = useState(0);
-  const [activeModal, setActiveModal] = useState<"total" | "present" | "mood" | "wellness" | null>(null);
+  const [activeModal, setActiveModal] = useState<"total" | "present" | "mood" | "wellness" | "classes" | null>(null);
 
   const fetchAll = async () => {
     try {
@@ -70,6 +72,8 @@ export default function AdminDashboard() {
         const tchs = data.teachers || [];
         setClassCount(cls.length);
         setTeacherCount(tchs.length);
+        setTeachersList(tchs);
+        setClassesList(cls);
       }
     } catch {}
   };
@@ -133,7 +137,7 @@ export default function AdminDashboard() {
 
   const statCards = [
     { title: "Total Students", value: String(totalStudents), sub: "Enrolled", icon: Users, gradient: "from-blue-500 to-cyan-600", glow: "shadow-blue-200", modalKey: "total" as const },
-    { title: "Classes", value: String(classCount), sub: `${teacherCount} teachers`, icon: GraduationCap, gradient: "from-emerald-500 to-teal-600", glow: "shadow-emerald-200", modalKey: null },
+    { title: "Classes", value: String(classCount), sub: `${teacherCount} teachers`, icon: GraduationCap, gradient: "from-emerald-500 to-teal-600", glow: "shadow-emerald-200", modalKey: "classes" as const },
     { title: "Present Today", value: String(checkedInToday), sub: `${absentToday} absent`, icon: CheckCircle2, gradient: "from-green-500 to-teal-500", glow: "shadow-green-200", modalKey: "present" as const },
     { title: "Avg Mood Score", value: `${avgMood}`, sub: "Out of 10", icon: SmilePlus, gradient: "from-purple-500 to-violet-600", glow: "shadow-purple-200", modalKey: "mood" as const },
     { title: "Wellness Alerts", value: String(riskCount), sub: riskCount > 0 ? "Need attention" : "All clear!", icon: riskCount > 0 ? AlertTriangle : ShieldCheck, gradient: riskCount > 0 ? "from-red-500 to-rose-600" : "from-green-400 to-teal-500", glow: riskCount > 0 ? "shadow-red-200" : "shadow-green-200", modalKey: "wellness" as const },
@@ -302,6 +306,70 @@ export default function AdminDashboard() {
                   );
                 })
               }
+            </div>
+          </StatModal>
+        )}
+
+        {/* ── CLASSES & TEACHERS MODAL ── */}
+        {activeModal === "classes" && (
+          <StatModal onClose={() => setActiveModal(null)} title="Classes & Teachers" subtitle={`${classCount} classes · ${teacherCount} teachers`} gradient="from-emerald-500 to-teal-600">
+            {/* Teachers Section */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center"><Users className="w-3.5 h-3.5 text-blue-600" /></div>
+                <h4 className="font-black text-slate-700 text-sm">Teachers ({teachersList.length})</h4>
+              </div>
+              {teachersList.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 text-sm font-bold">No teachers added yet</div>
+              ) : (
+                <div className="space-y-2">
+                  {teachersList.map((t: any, i: number) => (
+                    <motion.div key={t.id || i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+                      className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-blue-50 hover:border-blue-100 transition-all">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center font-black text-white text-lg flex-shrink-0 shadow-inner">
+                        {(t.name || "T")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black text-slate-800 truncate">{t.name}</div>
+                        <div className="text-xs text-slate-500 font-medium">{t.subject || "Teacher"}</div>
+                      </div>
+                      {t.classes && t.classes.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {t.classes.map((cls: string, ci: number) => (
+                            <span key={ci} className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">{cls}</span>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Classes Section */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-emerald-600" /></div>
+                <h4 className="font-black text-slate-700 text-sm">Classes ({classesList.length})</h4>
+              </div>
+              {classesList.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 text-sm font-bold">No classes added yet</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {classesList.map((c: any, i: number) => (
+                    <motion.div key={c.id || i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-100 hover:bg-emerald-50 hover:border-emerald-100 transition-all">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <GraduationCap className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-black text-slate-800 text-sm truncate">{c.name}{c.section ? ` - ${c.section}` : ""}</div>
+                        <div className="text-[10px] text-slate-500 font-medium">{c.teacher || "No teacher"} · {c.students || 0}/{c.limit || "∞"} students</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </StatModal>
         )}
