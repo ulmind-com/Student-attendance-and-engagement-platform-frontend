@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { SectionHeader, SettingsCard, Label, Input, SaveButton } from "./shared";
-import { Plus, Trash2, Edit3, Users, GraduationCap, BookOpen, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit3, Users, GraduationCap, BookOpen, Loader2, Check, X } from "lucide-react";
 
 type ClassItem = { id: number; name: string; teacher: string; students: number; limit: number };
 type TeacherItem = { id: number; name: string; subject: string; classes: string[] };
@@ -83,6 +83,9 @@ export default function ClassesUsersPanel() {
 
   // ── Class actions ──
   const [newClass, setNewClass] = useState({ name: "", teacher: "", limit: "30" });
+  const [editingClassId, setEditingClassId] = useState<number | null>(null);
+  const [editClassData, setEditClassData] = useState({ name: "", teacher: "", limit: "30" });
+
   const addClass = async () => {
     if (!newClass.name) return;
     const updated = [...classesRef.current, { id: Date.now(), name: newClass.name, teacher: newClass.teacher, students: 0, limit: Number(newClass.limit) }];
@@ -95,9 +98,23 @@ export default function ClassesUsersPanel() {
     setClasses(updated);
     await saveToServer(updated, teachersRef.current);
   };
+  const startEditClass = (cls: ClassItem) => {
+    setEditingClassId(cls.id);
+    setEditClassData({ name: cls.name, teacher: cls.teacher, limit: String(cls.limit) });
+  };
+  const saveEditClass = async () => {
+    if (!editingClassId) return;
+    const updated = classesRef.current.map(c => c.id === editingClassId ? { ...c, name: editClassData.name, teacher: editClassData.teacher, limit: Number(editClassData.limit) } : c);
+    setClasses(updated);
+    setEditingClassId(null);
+    await saveToServer(updated, teachersRef.current);
+  };
 
   // ── Teacher actions ──
   const [newTeacher, setNewTeacher] = useState({ name: "", subject: "" });
+  const [editingTeacherId, setEditingTeacherId] = useState<number | null>(null);
+  const [editTeacherData, setEditTeacherData] = useState({ name: "", subject: "" });
+
   const addTeacher = async () => {
     if (!newTeacher.name) return;
     const updated = [...teachersRef.current, { id: Date.now(), name: newTeacher.name, subject: newTeacher.subject, classes: [] }];
@@ -108,6 +125,17 @@ export default function ClassesUsersPanel() {
   const deleteTeacher = async (id: number) => {
     const updated = teachersRef.current.filter(i => i.id !== id);
     setTeachers(updated);
+    await saveToServer(classesRef.current, updated);
+  };
+  const startEditTeacher = (t: TeacherItem) => {
+    setEditingTeacherId(t.id);
+    setEditTeacherData({ name: t.name, subject: t.subject });
+  };
+  const saveEditTeacher = async () => {
+    if (!editingTeacherId) return;
+    const updated = teachersRef.current.map(t => t.id === editingTeacherId ? { ...t, name: editTeacherData.name, subject: editTeacherData.subject } : t);
+    setTeachers(updated);
+    setEditingTeacherId(null);
     await saveToServer(classesRef.current, updated);
   };
 
@@ -133,20 +161,35 @@ export default function ClassesUsersPanel() {
         <div className="space-y-2 mb-4">
           {classes.map(cls => (
             <div key={cls.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
-                  <GraduationCap className="w-4 h-4 text-white" />
+              {editingClassId === cls.id ? (
+                <div className="flex-1 flex items-center gap-2">
+                  <input value={editClassData.name} onChange={e => setEditClassData(d => ({...d, name: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Class name" />
+                  <input value={editClassData.teacher} onChange={e => setEditClassData(d => ({...d, teacher: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Teacher" />
+                  <input value={editClassData.limit} onChange={e => setEditClassData(d => ({...d, limit: e.target.value}))} type="number" className="w-16 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-green-500" placeholder="Limit" />
+                  <button onClick={saveEditClass} className="p-1.5 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"><Check className="w-3.5 h-3.5 text-green-600" /></button>
+                  <button onClick={() => setEditingClassId(null)} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><X className="w-3.5 h-3.5 text-slate-500" /></button>
                 </div>
-                <div>
-                  <div className="font-bold text-slate-800 text-sm">{cls.name}</div>
-                  <div className="text-xs text-slate-500">Teacher: {cls.teacher} • {cls.students}/{cls.limit} students</div>
-                </div>
-              </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="p-1.5 hover:bg-red-50 rounded-lg" onClick={() => deleteClass(cls.id)}>
-                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                </button>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center">
+                      <GraduationCap className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-800 text-sm">{cls.name}</div>
+                      <div className="text-xs text-slate-500">Teacher: {cls.teacher} • {cls.students}/{cls.limit} students</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-1.5 hover:bg-blue-50 rounded-lg" onClick={() => startEditClass(cls)}>
+                      <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                    </button>
+                    <button className="p-1.5 hover:bg-red-50 rounded-lg" onClick={() => deleteClass(cls.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -172,18 +215,34 @@ export default function ClassesUsersPanel() {
         <div className="space-y-2 mb-4">
           {teachers.map(t => (
             <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                  {t.name[0]}
+              {editingTeacherId === t.id ? (
+                <div className="flex-1 flex items-center gap-2">
+                  <input value={editTeacherData.name} onChange={e => setEditTeacherData(d => ({...d, name: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="Teacher name" />
+                  <input value={editTeacherData.subject} onChange={e => setEditTeacherData(d => ({...d, subject: e.target.value}))} className="flex-1 px-2 py-1 text-sm border border-slate-200 rounded-lg outline-none focus:border-blue-500" placeholder="Subject / Role" />
+                  <button onClick={saveEditTeacher} className="p-1.5 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"><Check className="w-3.5 h-3.5 text-green-600" /></button>
+                  <button onClick={() => setEditingTeacherId(null)} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><X className="w-3.5 h-3.5 text-slate-500" /></button>
                 </div>
-                <div>
-                  <div className="font-bold text-slate-800 text-sm">{t.name}</div>
-                  <div className="text-xs text-slate-500">{t.subject} • {t.classes.join(", ") || "No class assigned"}</div>
-                </div>
-              </div>
-              <button className="p-1.5 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteTeacher(t.id)}>
-                <Trash2 className="w-3.5 h-3.5 text-red-400" />
-              </button>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                      {t.name[0]}
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-800 text-sm">{t.name}</div>
+                      <div className="text-xs text-slate-500">{t.subject} • {t.classes.join(", ") || "No class assigned"}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-1.5 hover:bg-blue-50 rounded-lg" onClick={() => startEditTeacher(t)}>
+                      <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                    </button>
+                    <button className="p-1.5 hover:bg-red-50 rounded-lg" onClick={() => deleteTeacher(t.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           ))}
         </div>
