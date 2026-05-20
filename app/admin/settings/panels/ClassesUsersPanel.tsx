@@ -70,13 +70,18 @@ export default function ClassesUsersPanel() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [realStudentCount, setRealStudentCount] = useState(0);
 
   const classesRef = useRef(classes);
   const teachersRef = useRef(teachers);
   classesRef.current = classes;
   teachersRef.current = teachers;
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+    // Fetch real student count
+    fetch(`${API}/students`).then(r => r.json()).then(d => { if (Array.isArray(d)) setRealStudentCount(d.length); }).catch(() => {});
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -219,7 +224,7 @@ export default function ClassesUsersPanel() {
           <div className="text-[11px] font-bold text-blue-500/70 uppercase tracking-wider mt-0.5">Teachers</div>
         </div>
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-2xl p-4 text-center">
-          <div className="text-2xl font-black text-purple-600">{classes.reduce((a, c) => a + c.students, 0)}</div>
+          <div className="text-2xl font-black text-purple-600">{realStudentCount}</div>
           <div className="text-[11px] font-bold text-purple-500/70 uppercase tracking-wider mt-0.5">Total Students</div>
         </div>
       </div>
